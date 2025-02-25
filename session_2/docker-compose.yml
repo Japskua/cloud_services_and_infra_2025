@@ -23,6 +23,8 @@ services:
             - cloud_project # And we use this network to connect to the other services
     backend:
         image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./backend:/usr/src/app # We want to mount our local backend folder to the container
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
         command: bun run dev # This is the command we want to run. We are now overriding the default command.

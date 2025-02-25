@@ -95,7 +95,7 @@ services:
         volumes:
             - ./traefik/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
             - ./traefik/dynamic_conf.toml:/app/configs/dynamic_conf.toml:ro # We want to mount our local dynamic_conf.toml file
-            - ./traefik/certs:/certs:ro # We are adding the certificates to the container as read only (:ro)
+            - ./traefik/certs:/certs:ro # Remember to have the proper certificates here!
             - /var/run/docker.sock:/var/run/docker.sock:rw
         labels:
             - "traefik.enable=true" # We enable traefik for this service
@@ -111,7 +111,9 @@ services:
         networks:
             - cloud_project # And we use this network to connect to the other services
     backend:
-        image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+        image: project-backend:dev # This is the image we have built. If missing, check build_docker_images.sh
+        volumes:
+            - ./backend:/usr/src/app # We want to mount our local backend folder to the container
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
         command: bun run dev # This is the command we want to run. We are now overriding the default command.
@@ -129,3 +131,34 @@ networks:
 ```
 
 **NOTE:** We have now changed also the labels under backend. They are now for example "traefik.http.routers.**backend**.rule=Host(`backend.localhost`)". This is because we want to use the same traefik configuration for all the services.
+
+Now we are also running the backend in watch mode, in docker container. HOWEVER, notice we are mounting the local backend folder to the container. This means that any changes we make to the code will be reflected in the container. This way we can straight just start docker-compose up and develop everything on the local computer - No builds needed! (unless you add packages to the backend).
+
+Let's run docker-compose up and see if everything works.
+
+### Adding some routes
+
+Let's add some routes to the backend in order to see that things work. NOTE! Just start the docker-compose up and then you can edit the code locally in VSCode. All the changes will be reflected in the container immediately.
+
+In order to learn more about Elysia, you can read the tutorial and docs from here: https://elysiajs.com/tutorial.html
+
+Let's add a route to the backend that returns a simple message.
+
+##### backend/src/index.ts
+
+```ts
+import { Elysia } from "elysia";
+
+const app = new Elysia()
+    .get("/", () => "Hello Elysia")
+    .get("/hello", "Do you miss me?")
+    .listen(3000);
+
+console.log(
+    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+You should be able to just save the file, and navigate to https://backend.localhost/hello and see the message "Do you miss me?"
+
+### 3. Adding MySQL database and connecting to the project
