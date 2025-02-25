@@ -21,18 +21,17 @@ services:
             - "443:443" # Open port 443 to the outside world
         networks:
             - cloud_project # And we use this network to connect to the other services
-    node-app:
-        image: examplenode # This is the image we have built
-        ports:
-            - 3000:3000 # We want to open the port 3000 of the container and show it as port 3000 of the host
+    backend:
+        image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun run dev # This is the command we want to run. We are now overriding the default command.
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.node-app.rule=Host(`node-app.localhost`)" # This is the node-app service URL
-            - "traefik.http.routers.node-app.entrypoints=websecure"
-            - "traefik.http.routers.node-app.tls=true"
-            - "traefik.http.services.node-app.loadbalancer.server.port=3000"
+            - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.backend.entrypoints=websecure"
+            - "traefik.http.routers.backend.tls=true"
+            - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
 networks:
     cloud_project:

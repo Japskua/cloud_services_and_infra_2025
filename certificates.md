@@ -56,7 +56,7 @@ mkcert -install
 Now, create a wildcard certificate:
 
 ```sh
-mkcert "*.localhost" traefik.localhost backend.localhost postgres.localhost localhost 127.0.0.1 ::1
+mkcert "*.localhost" traefik.localhost backend.localhost mysql.localhost localhost 127.0.0.1 ::1
 ```
 
 This will generate:
@@ -72,8 +72,8 @@ If your wildcard has a different name, change it accordingly.
 
 ```sh
 mkdir -p traefik/certs
-mv _wildcard.localhost.pem traefik/certs/cert.pem
-mv _wildcard.localhost-key.pem traefik/certs/key.pem
+mv _wildcard.localhost+6.pem traefik/certs/cert.pem
+mv _wildcard.localhost+6-key.pem traefik/certs/key.pem
 ```
 
 Give read access to the certificate and key files:
