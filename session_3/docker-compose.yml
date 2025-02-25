@@ -21,6 +21,21 @@ services:
             - "443:443" # Open port 443 to the outside world
         networks:
             - cloud_project # And we use this network to connect to the other services
+
+    ui:
+        image: project-ui:dev # This is the image we have built. If missing, check build_docker_images.sh
+        volumes:
+            - ./ui:/usr/src/app # We want to mount our local ui folder to the container
+            - /usr/src/app/node_modules # A neat trick: We want to make sure the container node_modules does not get written by our local node_modules
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun dev -- --host # We want to add the --host so that we can access the frontend from outside the container
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.ui.rule=Host(`app.localhost`)" # This is the ui service URL
+            - "traefik.http.routers.ui.entrypoints=websecure"
+            - "traefik.http.routers.ui.tls=true"
+            - "traefik.http.services.ui.loadbalancer.server.port=5173"
     backend:
         image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
         volumes:
