@@ -1,0 +1,40 @@
+services:
+    traefik:
+        image: traefik:v3.3.3
+        command:
+            - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
+        volumes:
+            - ./traefik-ssl/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
+            - ./traefik-ssl/dynamic_conf.toml:/app/configs/dynamic_conf.toml:ro # We want to mount our local dynamic_conf.toml file
+            - ./traefik-ssl/certs:/certs:ro # We are adding the certificates to the container as read only (:ro)
+            - /var/run/docker.sock:/var/run/docker.sock:rw
+        labels:
+            - "traefik.enable=true" # We enable traefik for this service
+            - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # This is the traefik service URL
+            - "traefik.http.routers.traefik.entrypoints=websecure" # We want to use websecure as entrypoint (HTTPS)
+            - "traefik.http.routers.traefik.tls=true" # Enable the HTTPS router
+            - "traefik.http.routers.traefik.service=api@internal" # This is just internal configuration
+        environment:
+            - TZ=Europe/Helsinki # Lets set the environment variable TZ to Europe/Helsinki
+        ports:
+            - "80:80" # Open port 80 to the outside world
+            - "443:443" # Open port 443 to the outside world
+        networks:
+            - cloud_project # And we use this network to connect to the other services
+    node-app:
+        image: examplenode # This is the image we have built
+        ports:
+            - 3000:3000 # We want to open the port 3000 of the container and show it as port 3000 of the host
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.node-app.rule=Host(`node-app.localhost`)" # This is the node-app service URL
+            - "traefik.http.routers.node-app.entrypoints=websecure"
+            - "traefik.http.routers.node-app.tls=true"
+            - "traefik.http.services.node-app.loadbalancer.server.port=3000"
+
+networks:
+    cloud_project:
+        name: cloud_project # We are creating a network with the name cloud_project
+        driver: bridge # We are using the bridge driver

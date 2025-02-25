@@ -8,6 +8,7 @@ Topics & Hands-on:
 3. Running a sample container locally
 4. Creating a simple Docker Compose setup
 5. Basic Traefik setup for reverse proxying
+6. Setting the HTTPS localhost certificate for Traefik
 
     Project Task: Teams set up their initial repo and infrastructure.
 
@@ -302,3 +303,118 @@ Now you should see the Traefik dashboard.
 ![Screenshot of traefik dashboard](traefik_dashboard.png)
 
 And, if you navigate to https://node-app.localhost, you should see the same result as before (with the HTTPS warning at the start).
+
+## 6. Adding HTTPS to the Traefik setup
+
+We want to get rid of the annoying HTTPS warning. Otherwise, it will bug as for the rest of our lives. Traefik does create localhost certificates, but for example Chrome does not trust them, because they are not signed by a certificate authority. So, we will create our own certificates for localhost and sign the certificates.
+
+For this, we will use mkcert tool to make our life easier. The installation instructions can be found from [mkcert](https://github.com/FiloSottile/mkcert) page.
+
+1. Install mkcert
+2. Setup local certificate authority
+
+```sh
+mkcert -install
+```
+
+3. Create certificates for the required services (this example traefik.localhost & node-app.localhost)
+
+```sh
+mkcert "*.localhost" traefik.localhost node-app.localhost localhost 127.0.0.1 ::1
+```
+
+This will generate:
+• _.localhost.pem (certificate) [it will have +5 or more, depending on how many domains you have added]
+• _.localhost-key.pem (private key)
+
+4. Move the certificates to the correct folder
+
+```sh
+mkdir - traefik-ssl/
+mkdir -p traefik-ssl//certs
+mv _wildcard.localhost+5.pem traefik-ssl/certs/cert.pem
+mv _wildcard.localhost+5-key.pem traefik-ssl/certs/key.pem
+```
+
+5. Create a new dynamic configuration file for traefik (note we are working in new folder traefik-ssl)
+
+###### `traefik.toml`
+
+```toml
+[tls]
+  [tls.stores]
+    [tls.stores.default]
+      defaultCertificate = { certFile = "/certs/cert.pem", keyFile = "/certs/key.pem" }
+
+  [[tls.certificates]]
+    certFile = "/certs/cert.pem"
+    keyFile = "/certs/key.pem"
+```
+
+6. Update the traefik.toml to include the dynamic configuration file
+
+###### `traefik.toml`
+
+```toml
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[providers]
+  [providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    exposedByDefault = false
+    defaultRule = "Host(`{{ trimPrefix `/` .Name }}.localhost`)"
+
+  [providers.file]
+    filename = "/app/configs/dynamic_conf.toml"
+    watch = true
+
+[api]
+  dashboard = true
+
+[ping]
+
+[log]
+  level = "DEBUG"
+```
+
+7. Create a new docker-compose file with added root certificates and dynamic configuration file
+
+Here are the contents for the new docker-compose file (node-app and networks part is the same as before):
+
+###### `docker-compose-with-traefik-and-certs.yml`
+
+```yaml
+services:
+    traefik:
+        image: traefik:v3.3.3
+        command:
+            - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
+        volumes:
+            - ./traefik-ssl/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
+            - ./traefik-ssl/dynamic_conf.toml:/app/configs/dynamic_conf.toml:ro # We want to mount our local dynamic_conf.toml file
+            - ./traefik-ssl/certs:/certs:ro # We are adding the certificates to the container as read only (:ro)
+            - /var/run/docker.sock:/var/run/docker.sock:rw
+        labels:
+            - "traefik.enable=true" # We enable traefik for this service
+            - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # This is the traefik service URL
+            - "traefik.http.routers.traefik.entrypoints=websecure" # We want to use websecure as entrypoint (HTTPS)
+            - "traefik.http.routers.traefik.tls=true" # Enable the HTTPS router
+            - "traefik.http.routers.traefik.service=api@internal" # This is just internal configuration
+        environment:
+            - TZ=Europe/Helsinki # Lets set the environment variable TZ to Europe/Helsinki
+        ports:
+            - "80:80" # Open port 80 to the outside world
+            - "443:443" # Open port 443 to the outside world
+        networks:
+            - cloud_project # And we use this network to connect to the other services
+```
+
+8. Start the new docker-compose file
+
+Now everything should work nicely, without issues in the HTTPS certificates.
+
+Remember! When you are adding new services, remember to create the HTTPS certificates for them as well. Otherwise you will run into issues.
