@@ -72,8 +72,8 @@ If your wildcard has a different name, change it accordingly.
 
 ```sh
 mkdir -p traefik/certs
-mv _wildcard.localhost.pem traefik/certs/cert.pem
-mv _wildcard.localhost-key.pem traefik/certs/key.pem
+mv _wildcard.localhost+6.pem traefik/certs/cert.pem
+mv _wildcard.localhost+6-key.pem traefik/certs/key.pem
 ```
 
 Give read access to the certificate and key files:

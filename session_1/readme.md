@@ -10,7 +10,7 @@ Topics & Hands-on:
 5. Basic Traefik setup for reverse proxying
 6. Setting the HTTPS localhost certificate for Traefik
 
-    Project Task: Teams set up their initial repo and infrastructure.
+**Project Task**: Teams formed, start planning for the actual project. Make sure session tasks can be done on your own computer.
 
 ### Note for VSCode users
 
