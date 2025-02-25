@@ -7,7 +7,7 @@ Topics & Hands-on:
 2. Dockerizing the backend
 3. Adding Postgres database and connecting to the project
 
-**Project Task:** Teams set up their initial repo and infrastructure. Teams start to implement their backend and database.
+**Project Task:** Continue working on the project plan. Make sure you can build and run both backend and database.
 
 ## 0. Project Setup, Prerequisites
 
