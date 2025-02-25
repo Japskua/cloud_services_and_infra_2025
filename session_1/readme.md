@@ -157,6 +157,51 @@ docker stop node-app
 
 In this section, we will start using docker-compose to define the services we want to run. This is much easier than running everything separately on a command line. We will also use a docker-compose.yml file to define the services we want to run.
 
+Create a new file called docker-compose.yml and put it into the root folder (in this project, we consider root to be the session_1 folder).
+
+Add the following content to the docker-compose.yml file:
+
+###### `docker-compose.yml`
+
+```yaml
+services:
+    node-app:
+        image: examplenode # This is the image we have built
+        ports:
+            - 3000:3000 # We want to open the port 3000 of the container and show it as port 3000 of the host
+```
+
+Now, you can either use your IDE (for example VSCode) to run the docker-compose.yml file or you can run the following command (in the same folder as the docker-compose.yml file):
+
+```sh
+docker-compose up
+```
+
+And you should see following similar output:
+
+```sh
+[+] Running 2/2
+ ✔ Network session_1_default       Created                                                                                          0.1s
+ ✔ Container session_1-node-app-1  Created                                                                                          0.0s
+Attaching to node-app-1
+node-app-1  | Server ready
+```
+
+And by navigating again to http://localhost:3000, you should see the same result as before.
+
+To stop the services, use your IDE's down tools, or run the following command on commandline (in the same folder as the docker-compose.yml file):
+
+```sh
+docker-compose down
+```
+
+### Note for VSCode users
+
+Handy tools to use with docker-compose are the Docker extension and Docker Compose extension for VSCode. It allows you to easily run and stop the services.
+
+Docker extension for VSCode: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker
+Docker Compose extension for VSCode: https://marketplace.visualstudio.com/items?itemName=p1c2u.docker-compose
+
 ## 3. Basic Traefik setup for reverse proxying
 
 In order to run multiple services in a production environment (and to test them with proper URLs locall), we need to set up a reverse proxy.

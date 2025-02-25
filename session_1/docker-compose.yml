@@ -1,0 +1,5 @@
+services:
+    node-app:
+        image: examplenode # This is the image we have built
+        ports:
+            - 3000:3000 # We want to open the port 3000 of the container and show it as port 3000 of the host
