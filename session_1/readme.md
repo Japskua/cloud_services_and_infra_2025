@@ -11,6 +11,13 @@ Topics & Hands-on:
 
     Project Task: Teams set up their initial repo and infrastructure.
 
+### Note for VSCode users
+
+Handy tools to use with docker-compose are the Docker extension and Docker Compose extension for VSCode. It allows you to easily run and stop the services.
+
+Docker extension for VSCode: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker
+Docker Compose extension for VSCode: https://marketplace.visualstudio.com/items?itemName=p1c2u.docker-compose
+
 ## 1. Clone project template from GitHub (if provided)
 
 Clone this project template from the GitHub repository or just create a similar new project on your own local machine.
@@ -99,7 +106,7 @@ node app.js
 
 5. You should now be able to access the application by going to http://localhost:3000 in your browser.
 
-![Example of expressjs app running in the browser](image.png)
+![Example of expressjs app running in the browser](nodejs_running_screenshot.png)
 
 6. Create a new file called Dockerfile in the nodejs folder
 
@@ -195,14 +202,7 @@ To stop the services, use your IDE's down tools, or run the following command on
 docker-compose down
 ```
 
-### Note for VSCode users
-
-Handy tools to use with docker-compose are the Docker extension and Docker Compose extension for VSCode. It allows you to easily run and stop the services.
-
-Docker extension for VSCode: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker
-Docker Compose extension for VSCode: https://marketplace.visualstudio.com/items?itemName=p1c2u.docker-compose
-
-## 3. Basic Traefik setup for reverse proxying
+## 5. Basic Traefik setup for reverse proxying
 
 In order to run multiple services in a production environment (and to test them with proper URLs locall), we need to set up a reverse proxy.
 There are many options for this, but we will use Traefik: https://traefik.io/traefik/
@@ -210,3 +210,95 @@ There are many options for this, but we will use Traefik: https://traefik.io/tra
 During this course, we will not install any applications locally, but use everything via Docker. You can find the Traefik installation instructions from here: https://doc.traefik.io/traefik/getting-started/install-traefik/
 
 ### Getting started
+
+All right! Time to get some URLs working!
+First, we need to configure Traefik to work with our Docker setup.
+Let's start by creating a new docker-compose-with-traefik.yml file in the root folder.
+
+1. Create the docker-compose-with-traefik.yml file in the root folder and add the following content to it:
+
+###### `docker-compose-with-traefik.yml`
+
+```yaml
+services:
+    traefik:
+        image: traefik:v3.3.3
+        command:
+            - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
+        volumes:
+            - ./traefik/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
+            - /var/run/docker.sock:/var/run/docker.sock:rw
+        labels:
+            - "traefik.enable=true" # We enable traefik for this service
+            - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # This is the traefik service URL
+            - "traefik.http.routers.traefik.entrypoints=websecure" # We want to use websecure as entrypoint (HTTPS)
+            - "traefik.http.routers.traefik.tls=true" # Enable the HTTPS router
+            - "traefik.http.routers.traefik.service=api@internal" # This is just internal configuration
+        environment:
+            - TZ=Europe/Helsinki # Lets set the environment variable TZ to Europe/Helsinki
+        ports:
+            - "80:80" # Open port 80 to the outside world
+            - "443:443" # Open port 443 to the outside world
+        networks:
+            - cloud_project # And we use this network to connect to the other services
+    node-app:
+        image: examplenode # This is the image we have built
+        ports:
+            - 3000:3000 # We want to open the port 3000 of the container and show it as port 3000 of the host
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.node-app.rule=Host(`node-app.localhost`)" # This is the node-app service URL
+            - "traefik.http.routers.node-app.entrypoints=websecure"
+            - "traefik.http.routers.node-app.tls=true"
+            - "traefik.http.services.node-app.loadbalancer.server.port=3000"
+
+networks:
+    cloud_project:
+        name: cloud_project # We are creating a network with the name cloud_project
+        driver: bridge # We are using the bridge driver
+```
+
+2. Create the traefik folder in the root folder and create the traefik.toml file in the traefik folder.
+
+Add the following content to the traefik.toml file:
+
+###### `traefik.toml`
+
+```toml
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[providers]
+  [providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    exposedByDefault = false
+    defaultRule = "Host(`{{ trimPrefix `/` .Name }}.localhost`)"
+
+[api]
+  dashboard = true
+
+[ping]
+
+[log]
+  level = "DEBUG"
+```
+
+3. Now, run docker-compose up for the docker-compose-with-traefik.yml file.
+
+You should be able to navigate to https://traefik.localhost and see the Traefik dashboard.
+HOWEVER! This is not working quite properly yet, because we have not configured the certificates.
+You will see the following error (at least in Chrome):
+
+![HTTPS Error given by Chrome](https_error.png)
+
+Don't worry, just click on the "Advanced" button and then click on "Proceed to traefik.localhost (unsafe)".
+Now you should see the Traefik dashboard.
+
+![Screenshot of traefik dashboard](traefik_dashboard.png)
+
+And, if you navigate to https://node-app.localhost, you should see the same result as before (with the HTTPS warning at the start).
