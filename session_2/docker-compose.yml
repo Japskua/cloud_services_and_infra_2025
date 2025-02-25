@@ -28,12 +28,37 @@ services:
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
         command: bun run dev # This is the command we want to run. We are now overriding the default command.
+        environment:
+            - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
             - "traefik.http.routers.backend.entrypoints=websecure"
             - "traefik.http.routers.backend.tls=true"
             - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    postgres:
+        image: postgres:17.2
+        environment:
+            - TZ=Europe/Helsinki
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=projectdb
+        volumes:
+            - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./db_data:/var/lib/postgresql/data
+        healthcheck: # Hey! We are checking that the postgres is up and running!
+            test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
+            - "traefik.http.routers.postgres.entrypoints=websecure"
+            - "traefik.http.routers.postgres.tls=true"
+            - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+        networks:
+            - cloud_project
 
 networks:
     cloud_project:

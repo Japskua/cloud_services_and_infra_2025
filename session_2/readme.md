@@ -5,15 +5,13 @@ Topics & Hands-on:
 
 1. Setting up Bun (Node.js alternative) backend with Elysia (Express alternative)
 2. Dockerizing the backend
-3. Connecting to MySQL with Sequelize
-4. Writing a simple REST API with CRUD operations
-5. Dockerizing the backend & database
+3. Adding Postgres database and connecting to the project
 
 **Project Task:** Teams set up their initial repo and infrastructure. Teams start to implement their backend and database.
 
 ## 0. Project Setup, Prerequisites
 
-**NOTE!** Remember to run run the certificates creation for the project! This time we need backend.localhost, traefik.localhost and mysql.localhost. If you don't remember how to do that, check the previous session or `certificates.md` from the project root.
+**NOTE!** Remember to run run the certificates creation for the project! This time we need backend.localhost, traefik.localhost and postgres.localhost. If you don't remember how to do that, check the previous session or `certificates.md` from the project root.
 
 ## 1. Setting up Bunjs backend with Elysia
 
@@ -161,4 +159,182 @@ console.log(
 
 You should be able to just save the file, and navigate to https://backend.localhost/hello and see the message "Do you miss me?"
 
-### 3. Adding MySQL database and connecting to the project
+### 3. Adding Postgres database and connecting to the project
+
+1. Create new folder in the root called `database`
+2. Create a new file called `init.sql` in the `database` folder.
+
+Fill the following content to the file:
+
+```sql
+-- Create books table
+CREATE TABLE books (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    published_year INTEGER,
+    genre VARCHAR(100),
+    isbn VARCHAR(20) UNIQUE,
+    description TEXT,
+    page_count INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on commonly searched fields
+CREATE INDEX idx_books_author ON books(author);
+CREATE INDEX idx_books_genre ON books(genre);
+
+-- Insert sample data
+INSERT INTO books (title, author, published_year, genre, isbn, description, page_count)
+VALUES
+    ('The Great Gatsby', 'F. Scott Fitzgerald', 1925, 'Classic', '9780743273565', 'A story of wealth, love, and the American Dream in the Jazz Age', 180),
+    ('To Kill a Mockingbird', 'Harper Lee', 1960, 'Fiction', '9780061120084', 'A story about racial inequality and moral growth in the American South', 281),
+    ('1984', 'George Orwell', 1949, 'Dystopian', '9780451524935', 'A dystopian social science fiction novel set in a totalitarian future', 328),
+    ('The Hobbit', 'J.R.R. Tolkien', 1937, 'Fantasy', '9780618260300', 'A fantasy novel about the adventures of a hobbit named Bilbo Baggins', 310),
+    ('Pride and Prejudice', 'Jane Austen', 1813, 'Romance', '9780141439518', 'A romantic novel of manners focusing on the Bennet family', 432),
+    ('The Catcher in the Rye', 'J.D. Salinger', 1951, 'Coming-of-age', '9780316769488', 'A story about teenage angst and alienation', 277),
+    ('Brave New World', 'Aldous Huxley', 1932, 'Dystopian', '9780060850524', 'A dystopian novel set in a futuristic World State', 311),
+    ('The Lord of the Rings', 'J.R.R. Tolkien', 1954, 'Fantasy', '9780618640157', 'An epic high-fantasy novel', 1178),
+    ('Harry Potter and the Philosophers Stone', 'J.K. Rowling', 1997, 'Fantasy', '9780747532743', 'The first novel in the Harry Potter series', 223),
+    ('The Hunger Games', 'Suzanne Collins', 2008, 'Dystopian', '9780439023481', 'A dystopian novel set in a post-apocalyptic nation', 374);
+```
+
+3. Add the database to the docker-compose.yml file.
+
+```yaml
+postgres:
+    image: postgres:17.2
+    environment:
+        - TZ=Europe/Helsinki
+        - POSTGRES_USER=user
+        - POSTGRES_PASSWORD=password
+        - POSTGRES_DB=projectdb
+    volumes:
+        - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+        - ./db_data:/var/lib/postgresql/data
+    healthcheck: # Hey! We are checking that the postgres is up and running!
+        test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
+        - "traefik.http.routers.postgres.entrypoints=websecure"
+        - "traefik.http.routers.postgres.tls=true"
+        - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+    networks:
+        - cloud_project
+```
+
+4. Let's fire up the docker-compose up and see if everything works.
+
+If the docker-compose starts up and logs appear without errors (=== you followed this guide), you should be good to continue.
+
+5. Connecting backend to the database
+
+Bun.js comes with a package called Bun.sqlite that allows you to connect to sqlite databases. See more at https://bun.sh/docs/api/sql
+
+Let's create a new file called `database.ts` in the `backend/src` folder.
+
+###### backend/src/database.ts
+
+```ts
+// backend/src/database.ts
+import { sql } from "bun";
+
+// Define a Book interface to match our database schema
+interface Book {
+    id: number;
+    title: string;
+    author: string;
+    published_year: number;
+    genre: string;
+    isbn: string;
+    description: string;
+    page_count: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export const getBooks = async () => {
+    console.log(sql.options);
+    try {
+        // Get the raw query results
+        const result = await sql`SELECT * FROM books`.values();
+
+        // The result is an array where each book is represented as an array of values
+        // We need to exclude the last two elements (command and count)
+        const booksData = result.slice(0, -2);
+
+        // Map each array to a proper Book object with named properties
+        const books = booksData.map((book: any) => ({
+            id: book[0],
+            title: book[1],
+            author: book[2],
+            published_year: book[3],
+            genre: book[4],
+            isbn: book[5],
+            description: book[6],
+            page_count: book[7],
+            created_at: book[8],
+            updated_at: book[9]
+        }));
+        console.log(books);
+        return books;
+    } catch (error) {
+        console.error("Error fetching books:", error);
+        return [];
+    }
+};
+```
+
+Also, edit the `backend/src/index.ts` file to use the new database.ts file.
+
+###### backend/src/index.ts
+
+```ts
+import { Elysia } from "elysia";
+import { getBooks } from "./database";
+
+const app = new Elysia()
+    .get("/", () => "Hello Elysia")
+    .get("/hello", "Do you miss me?")
+    .get("/books", async () => {
+        const books = await getBooks();
+        return JSON.stringify(books);
+    })
+    .listen(3000);
+
+console.log(
+    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+One more thing to do. We need to add the postgres database access URL to the docker-compose.yml file.
+
+Just add the environment variable to the backend service.
+NOTE! THIS REQUIRES YOU TO STOP AND START THE DOCKER COMPOSE AGAIN TO TAKE EFFECT!
+
+```yaml
+backend:
+    image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+    volumes:
+        - ./backend:/usr/src/app # We want to mount our local backend folder to the container
+    networks:
+        - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    command: bun run dev # This is the command we want to run. We are now overriding the default command.
+    environment:
+        - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
+        - "traefik.http.routers.backend.entrypoints=websecure"
+        - "traefik.http.routers.backend.tls=true"
+        - "traefik.http.services.backend.loadbalancer.server.port=3000"
+```
+
+Now, if you start the docker-compose up and navigate to https://backend.localhost/books, you should see the books in the database.
+
+![Successful listing of books](books_listing.png)
