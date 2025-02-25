@@ -1,0 +1,8 @@
+# Mac OS related gitignores
+.DS_Store
+
+# Node related gitignores
+node_modules
+
+# VSCode related gitignores
+.vscode
