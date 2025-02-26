@@ -1,0 +1,81 @@
+services:
+    traefik:
+        image: traefik:v3.3.3
+        command:
+            - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
+        volumes:
+            - ./traefik/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
+            - ./traefik/dynamic_conf.toml:/app/configs/dynamic_conf.toml:ro # We want to mount our local dynamic_conf.toml file
+            - ./traefik/certs:/certs:ro # We are adding the certificates to the container as read only (:ro)
+            - /var/run/docker.sock:/var/run/docker.sock:rw
+        labels:
+            - "traefik.enable=true" # We enable traefik for this service
+            - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # This is the traefik service URL
+            - "traefik.http.routers.traefik.entrypoints=websecure" # We want to use websecure as entrypoint (HTTPS)
+            - "traefik.http.routers.traefik.tls=true" # Enable the HTTPS router
+            - "traefik.http.routers.traefik.service=api@internal" # This is just internal configuration
+        environment:
+            - TZ=Europe/Helsinki # Lets set the environment variable TZ to Europe/Helsinki
+        ports:
+            - "80:80" # Open port 80 to the outside world
+            - "443:443" # Open port 443 to the outside world
+        networks:
+            - cloud_project # And we use this network to connect to the other services
+
+    ui:
+        image: project-ui:dev # This is the image we have built. If missing, check build_docker_images.sh
+        volumes:
+            - ./ui:/usr/src/app # We want to mount our local ui folder to the container
+            - /usr/src/app/node_modules # A neat trick: We want to make sure the container node_modules does not get written by our local node_modules
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun dev -- --host # We want to add the --host so that we can access the frontend from outside the container
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.ui.rule=Host(`app.localhost`)" # This is the ui service URL
+            - "traefik.http.routers.ui.entrypoints=websecure"
+            - "traefik.http.routers.ui.tls=true"
+            - "traefik.http.services.ui.loadbalancer.server.port=5173"
+    backend:
+        image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./backend:/usr/src/app # We want to mount our local backend folder to the container
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun run dev # This is the command we want to run. We are now overriding the default command.
+        environment:
+            - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.backend.entrypoints=websecure"
+            - "traefik.http.routers.backend.tls=true"
+            - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    postgres:
+        image: postgres:17.2
+        environment:
+            - TZ=Europe/Helsinki
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=projectdb
+        volumes:
+            - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./db_data:/var/lib/postgresql/data
+        healthcheck: # Hey! We are checking that the postgres is up and running!
+            test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
+            - "traefik.http.routers.postgres.entrypoints=websecure"
+            - "traefik.http.routers.postgres.tls=true"
+            - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+        networks:
+            - cloud_project
+
+networks:
+    cloud_project:
+        name: cloud_project # We are creating a network with the name cloud_project
+        driver: bridge # We are using the bridge driver
