@@ -1,6 +1,6 @@
-# Cloud Services & Infrastructure - Session 3 - Frontend & Nginx
+# Cloud Services & Infrastructure - Session 3 - Frontend
 
-Goal: Deploy the React UI served through Nginx.
+Goal: Deploy the React UI served through Vite.
 Topics & Hands-on:
 
 1. Create a basic React UI (starting from a template)
