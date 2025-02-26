@@ -338,7 +338,7 @@ mv _wildcard.localhost+5-key.pem traefik-ssl/certs/key.pem
 
 5. Create a new dynamic configuration file for traefik (note we are working in new folder traefik-ssl)
 
-###### `traefik.toml`
+###### `dynamic_conf.toml`
 
 ```toml
 [tls]
