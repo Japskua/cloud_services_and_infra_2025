@@ -12,7 +12,7 @@ export const UserDTO = {
         const newUser: User = {
             ...user,
             id: users.length + 1,
-            passwordHash: await Bun.password.hash(user.password)
+            password: await Bun.password.hash(user.password)
         };
 
         users.push(newUser);
@@ -27,7 +27,7 @@ export const UserDTO = {
 type User = {
     id: number;
     email: string;
-    passwordHash: string;
+    password: string;
 };
 
 type UserWithoutId = Omit<User, "id"> & {
