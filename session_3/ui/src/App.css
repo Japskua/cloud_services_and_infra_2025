@@ -1,42 +1,128 @@
-#root {
-  max-width: 1280px;
+/* ui/src/App.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+.title {
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #4a90e2;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.loading, .error {
   text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.error {
+  color: #e53935;
+  background-color: #ffebee;
+  border-radius: 8px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Flexbox layout */
+.books-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px; /* Negative margin to counteract the padding on cards */
+}
+
+.book-card {
+  flex: 0 0 calc(33.333% - 20px); /* Three columns minus the margins */
+  margin: 10px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* For tablets */
+@media (max-width: 1024px) {
+  .book-card {
+    flex: 0 0 calc(50% - 20px); /* Two columns on tablets */
   }
-  to {
-    transform: rotate(360deg);
+}
+
+/* For mobile */
+@media (max-width: 600px) {
+  .book-card {
+    flex: 0 0 calc(100% - 20px); /* One column on mobile */
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.book-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
 }
 
-.card {
-  padding: 2em;
+.book-genre {
+  display: inline-block;
+  background-color: #4a90e2;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
 }
 
-.read-the-docs {
-  color: #888;
+.book-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.book-author {
+  color: #666;
+  font-size: 1rem;
+}
+
+.book-details {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.book-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.book-description {
+  font-size: 0.95rem;
+  color: #333;
 }
