@@ -4,6 +4,15 @@ import { t } from "elysia";
 
 const users: User[] = []; // Mock User DB
 
+const defaultPermissions = [
+    "read:users",
+    "create:users",
+    "read:data",
+    "create:data",
+    "write:data",
+    "delete:data"
+];
+
 /**
  * User Data Transfer Object
  */
@@ -11,11 +20,12 @@ export const UserDTO = {
     findUserByEmail: (email: string) => {
         return users.find((user) => user.email === email);
     },
-    createUser: async (user: UserWithoutId) => {
+    createUser: async (user: UserModelForSignup) => {
         const newUser: User = {
             ...user,
             id: users.length + 1,
-            password: await Bun.password.hash(user.password)
+            password: await Bun.password.hash(user.password),
+            permissions: defaultPermissions
         };
 
         users.push(newUser);
@@ -27,14 +37,18 @@ export const UserDTO = {
     }
 };
 
-type UserWithoutId = Omit<User, "id"> & {
-    password: string;
-};
+export const userModelForSignup = t.Object({
+    email: t.String(),
+    password: t.String()
+});
+
+export type UserModelForSignup = typeof userModelForSignup.static;
 
 export type User = typeof userModel.static;
 
 export const userModel = t.Object({
     id: t.Number(),
     email: t.String(),
-    password: t.String()
+    password: t.String(),
+    permissions: t.Array(t.String())
 });

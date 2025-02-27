@@ -1,7 +1,7 @@
 // auth/src/routes/signUpRoute.ts
 
 import Elysia, { t } from "elysia";
-import { UserDTO, userModel } from "../models/userModel";
+import { UserDTO, userModel, userModelForSignup } from "../models/userModel";
 import { jwtConfig } from "../config/jwt.config";
 
 export const signupRouter = new Elysia().use(jwtConfig).post(
@@ -23,7 +23,10 @@ export const signupRouter = new Elysia().use(jwtConfig).post(
         if (!newUser) return error(400, "Problems creating user");
 
         // 5. Tokenize the results with JWT.
-        const token = await jwt_auth.sign({ id: newUser.id });
+        const token = await jwt_auth.sign({
+            id: newUser.id,
+            permissions: newUser.permissions.toString()
+        });
         console.log("Token created!");
         console.log(token);
 
@@ -33,6 +36,6 @@ export const signupRouter = new Elysia().use(jwtConfig).post(
         return { access_token: token };
     },
     {
-        body: userModel
+        body: userModelForSignup
     }
 );

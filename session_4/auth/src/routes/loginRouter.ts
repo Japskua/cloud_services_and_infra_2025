@@ -1,6 +1,6 @@
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwt.config";
-import { UserDTO, userModel } from "../models/userModel";
+import { UserDTO, userModel, userModelForSignup } from "../models/userModel";
 
 export const loginRouter = new Elysia().use(jwtConfig).post(
     "/login",
@@ -21,7 +21,10 @@ export const loginRouter = new Elysia().use(jwtConfig).post(
         if (!isPasswordCorrect) error(400, "Password is incorrect");
 
         // 5. Tokenize the results with JWT and return the token.
-        const token = await jwt_auth.sign({ id: foundUser.id });
+        const token = await jwt_auth.sign({
+            id: foundUser.id,
+            permissions: foundUser.permissions.toString()
+        });
 
         console.log("Token created!");
         console.log(token);
@@ -32,6 +35,6 @@ export const loginRouter = new Elysia().use(jwtConfig).post(
         return { access_token: token };
     },
     {
-        body: userModel
+        body: userModelForSignup
     }
 );
