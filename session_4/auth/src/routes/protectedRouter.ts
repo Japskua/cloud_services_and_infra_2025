@@ -1,5 +1,5 @@
 import Elysia from "elysia";
-import { jwtConfig } from "../config/jwt.config";
+import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
 
 export const protectedRouter = new Elysia()

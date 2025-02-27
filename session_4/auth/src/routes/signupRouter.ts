@@ -2,7 +2,7 @@
 
 import Elysia, { t } from "elysia";
 import { UserDTO, userModel, userModelForSignup } from "../models/userModel";
-import { jwtConfig } from "../config/jwt.config";
+import { jwtConfig } from "../config/jwtConfig";
 
 export const signupRouter = new Elysia().use(jwtConfig).post(
     "/signup",
