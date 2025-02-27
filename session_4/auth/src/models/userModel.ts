@@ -1,4 +1,7 @@
-// auth/src/user.ts
+// auth/src/models/userModel.ts
+
+import { t } from "elysia";
+
 const users: User[] = []; // Mock User DB
 
 /**
@@ -24,12 +27,14 @@ export const UserDTO = {
     }
 };
 
-type User = {
-    id: number;
-    email: string;
-    password: string;
-};
-
 type UserWithoutId = Omit<User, "id"> & {
     password: string;
 };
+
+export type User = typeof userModel.static;
+
+export const userModel = t.Object({
+    id: t.Number(),
+    email: t.String(),
+    password: t.String()
+});

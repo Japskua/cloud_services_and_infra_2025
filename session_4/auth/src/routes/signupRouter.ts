@@ -1,7 +1,7 @@
 // auth/src/routes/signUpRoute.ts
 
 import Elysia, { t } from "elysia";
-import { UserDTO } from "../models/user.model";
+import { UserDTO, userModel } from "../models/userModel";
 import { jwtConfig } from "../config/jwt.config";
 
 export const signupRouter = new Elysia().use(jwtConfig).post(
@@ -33,9 +33,6 @@ export const signupRouter = new Elysia().use(jwtConfig).post(
         return { access_token: token };
     },
     {
-        body: t.Object({
-            email: t.String(),
-            password: t.String()
-        })
+        body: userModel
     }
 );
