@@ -458,3 +458,11 @@ Create the following files:
 -   components/Signup.tsx
 -   components/Auth.css
 -   contexts/AuthContext.tsx
+
+Also, move the Books to it's own file
+
+-   components/Books.tsx
+
+After this, you should have a properly working login flow.
+
+![Login page](login_page.png)
