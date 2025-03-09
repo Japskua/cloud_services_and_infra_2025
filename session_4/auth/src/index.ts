@@ -2,7 +2,7 @@
 
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import { signupRouter } from "./routes/signupRouter";
 import { loginRouter } from "./routes/loginRouter";
 import { protectedRouter } from "./routes/protectedRouter";

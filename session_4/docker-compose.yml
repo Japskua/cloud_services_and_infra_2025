@@ -31,7 +31,7 @@ services:
         command: bun dev # This is the command we want to run. We are now overriding the default command.
         environment:
             - PORT=3001 # We want to set the port in the environment variables
-            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.auth.rule=Host(`auth.localhost`)" # This is the backend service URL
@@ -61,6 +61,7 @@ services:
         command: bun run dev # This is the command we want to run. We are now overriding the default command.
         environment:
             - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL

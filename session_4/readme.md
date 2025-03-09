@@ -392,3 +392,53 @@ Yes! Now we should have a properly working authentication system. Of course, it 
 ## 3. Securing API endpoints
 
 Currently our authentication API will allow users to signup & login. However, our original `backend` does no such thing. So, we have to add checking of JWT tokens into our backend. Let's see how that is implemented.
+
+First, we must install a way to read the JWT token from the request. We will use the `@elysiajs/jwt` package for this. Lets install it (and remember to build the backend docker image again after this!)
+
+Next, copy the `jwtConfig.ts` from the `auth` service to the `backend` service. Also, copy the `authorizationMiddleware.ts` to the `backend` service.
+
+Next, let's modify the `backend/src/routes/index.ts` to include the `jwtConfig` and `authorizationMiddleware` into the app.
+
+```ts
+// backend/src/index.ts
+
+import { Elysia } from "elysia";
+import swagger from "@elysiajs/swagger";
+import { cors } from "@elysiajs/cors";
+import { getBooks } from "./database";
+import { protectedRouter } from "./routes/protectedRouter";
+
+const PORT = process.env.PORT || 3000;
+
+const app = new Elysia()
+    .use(swagger())
+    .use(cors())
+    .get("/", () => "Hello Elysia")
+    .get("/hello", "Do you miss me?")
+    .get("/books", async () => {
+        const books = await getBooks();
+        return JSON.stringify(books);
+    })
+    .use(protectedRouter)
+    .listen(PORT);
+
+console.log(
+    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+Note! We must add the JWT_SECRET environment variable to the `backend` service in the `docker-compose.yml` file. This must be the same secret as the one used in the `auth` service.
+
+Now, we can test the route. If we just navigate there, we should get a 401 error.
+
+![Not authorized when navigating to URL](not_authorized.png)
+
+However, if we add the Authorization header, we should get the response back.
+
+![Backend accepts authorization](backend_authorization.png)
+
+If we make also the /books route to be protected, we should get the same response. So now, we need to implement a login flow for the frontend.
+
+## 4. Login/logout flow in the frontend
+
+Let's create a simple login flow in the frontend. This will be a simple form that will send the email and password to the backend. The backend will then check if the user exists and if the password is correct. If everything is correct, the backend will return a JWT token. The frontend will then store the token in the local storage and redirect the user to the protected route.
