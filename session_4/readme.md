@@ -1,4 +1,4 @@
-# Cloud Services & Infrastructure - Session 3 - Authentication system
+# Cloud Services & Infrastructure - Session 4 - Authentication system
 
 Goal: Implement user authentication & security.
 Topics & Hands-on:
