@@ -63,14 +63,16 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group">
-                    <label htmlFor="email">Email</label>
+                    <label htmlFor="email">Email Address</label>
                     <input
                         type="email"
                         id="email"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
                         required
+                        autoFocus
                     />
                 </div>
 
@@ -79,6 +81,7 @@ const Login = () => {
                     <input
                         type="password"
                         id="password"
+                        placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={loading}
@@ -91,13 +94,19 @@ const Login = () => {
                     className="auth-button"
                     disabled={loading}
                 >
-                    {loading ? "Logging In..." : "Log In"}
+                    {loading ? "Signing In..." : "Sign In"}
                 </button>
             </form>
 
             <div className="auth-link">
-                Don't have an account?{" "}
-                <a href="#" onClick={() => navigate("/signup")}>
+                Don't have an account?
+                <a
+                    href="#"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        navigate("/signup");
+                    }}
+                >
                     Sign Up
                 </a>
             </div>

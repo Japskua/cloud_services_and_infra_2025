@@ -74,14 +74,16 @@ const SignUp = () => {
 
             <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group">
-                    <label htmlFor="email">Email</label>
+                    <label htmlFor="email">Email Address</label>
                     <input
                         type="email"
                         id="email"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
                         required
+                        autoFocus
                     />
                 </div>
 
@@ -90,6 +92,7 @@ const SignUp = () => {
                     <input
                         type="password"
                         id="password"
+                        placeholder="Create a password (min. 8 characters)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={loading}
@@ -103,6 +106,7 @@ const SignUp = () => {
                     <input
                         type="password"
                         id="confirmPassword"
+                        placeholder="Confirm your password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         disabled={loading}
@@ -115,14 +119,20 @@ const SignUp = () => {
                     className="auth-button"
                     disabled={loading}
                 >
-                    {loading ? "Signing Up..." : "Sign Up"}
+                    {loading ? "Creating Account..." : "Create Account"}
                 </button>
             </form>
 
             <div className="auth-link">
-                Already have an account?{" "}
-                <a href="#" onClick={() => navigate("/login")}>
-                    Log In
+                Already have an account?
+                <a
+                    href="#"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        navigate("/login");
+                    }}
+                >
+                    Sign In
                 </a>
             </div>
         </div>
