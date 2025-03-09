@@ -56,7 +56,7 @@ mkcert -install
 Now, create a wildcard certificate:
 
 ```sh
-mkcert "*.localhost" traefik.localhost app.localhost backend.localhost postgres.localhost localhost 127.0.0.1 ::1
+mkcert "*.localhost" traefik.localhost app.localhost backend.localhost postgres.localhost auth.localhost
 ```
 
 This will generate:
