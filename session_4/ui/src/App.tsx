@@ -1,85 +1,72 @@
 // ui/src/App.tsx
 
-import { useState, useEffect } from "react";
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    Navigate
+} from "react-router-dom";
+import { useEffect } from "react";
 import axios from "axios";
 import "./App.css";
+import "./components/Auth.css";
 
-// Define the Book interface to type our data
-interface Book {
-    id: number;
-    title: string;
-    author: string;
-    published_year: number;
-    genre: string;
-    isbn: string;
-    description: string;
-    page_count: number;
-    created_at: string;
-    updated_at: string;
-}
+// Import components
+import SignUp from "./components/SignUp";
+import Login from "./components/Login";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
+import Books from "./components/Books";
 
 function App() {
-    const [books, setBooks] = useState<Book[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
+    // Set up axios interceptor to handle token expiration
     useEffect(() => {
-        // Function to fetch books from the API
-        const fetchBooks = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get<Book[]>(
-                    "https://backend.localhost/books"
-                );
-                setBooks(response.data);
-                setError(null);
-            } catch (err) {
-                console.error("Error fetching books:", err);
-                setError("Failed to fetch books. Please try again later.");
-            } finally {
-                setLoading(false);
-            }
-        };
+        // Add request interceptor to add token to all requests
+        axios.interceptors.request.use(
+            (config) => {
+                const token = localStorage.getItem("access_token");
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
 
-        // Call the fetch function when component mounts
-        fetchBooks();
-    }, []); // Empty dependency array means this effect runs once on mount
+        // Add response interceptor to handle unauthorized errors
+        axios.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response && error.response.status === 401) {
+                    // If unauthorized, clear token and redirect to login
+                    localStorage.removeItem("access_token");
+                    window.location.href = "/login";
+                }
+                return Promise.reject(error);
+            }
+        );
+    }, []);
 
     return (
-        <div className="container">
-            <h1 className="title">Book Collection</h1>
-
-            {loading ? (
-                <p className="loading">Loading books...</p>
-            ) : error ? (
-                <p className="error">{error}</p>
-            ) : (
-                <div className="books-container">
-                    {books.map((book) => (
-                        <div key={book.id} className="book-card">
-                            <div className="book-header">
-                                <span className="book-genre">
-                                    {book.genre.toUpperCase()}
-                                </span>
-                                <h2 className="book-title">{book.title}</h2>
-                                <p className="book-author">{book.author}</p>
-                            </div>
-                            <div className="book-details">
-                                <div className="book-meta">
-                                    <span>
-                                        Published: {book.published_year}
-                                    </span>
-                                    <span>{book.page_count} pages</span>
-                                </div>
-                                <p className="book-description">
-                                    {book.description}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+        <Router>
+            <AuthProvider>
+                <Navbar />
+                <Routes>
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                        path="/"
+                        element={
+                            <ProtectedRoute>
+                                <Books />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </AuthProvider>
+        </Router>
     );
 }
 

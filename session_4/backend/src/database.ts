@@ -16,7 +16,7 @@ interface Book {
 }
 
 export const getBooks = async () => {
-    console.log(sql.options);
+    // console.log(sql.options);
     try {
         // Get the raw query results
         const result = await sql`SELECT * FROM books`.values();
@@ -38,7 +38,7 @@ export const getBooks = async () => {
             created_at: book[8],
             updated_at: book[9]
         }));
-        console.log(books);
+        // console.log(books);
         return books;
     } catch (error) {
         console.error("Error fetching books:", error);

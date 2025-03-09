@@ -13,10 +13,10 @@ const app = new Elysia()
     .use(cors())
     .get("/", () => "Hello Elysia")
     .get("/hello", "Do you miss me?")
-    .get("/books", async () => {
+    /*.get("/books", async () => {
         const books = await getBooks();
         return JSON.stringify(books);
-    })
+    })*/
     .use(protectedRouter)
     .listen(PORT);
 

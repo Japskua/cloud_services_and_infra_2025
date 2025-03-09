@@ -442,3 +442,19 @@ If we make also the /books route to be protected, we should get the same respons
 ## 4. Login/logout flow in the frontend
 
 Let's create a simple login flow in the frontend. This will be a simple form that will send the email and password to the backend. The backend will then check if the user exists and if the password is correct. If everything is correct, the backend will return a JWT token. The frontend will then store the token in the local storage and redirect the user to the protected route.
+
+First, we have to install react-router-dom.
+
+```sh
+bun add react-router-dom
+```
+
+Next, we can create the login page.
+Create the following files:
+
+-   components/Login.tsx
+-   components/Navbar.tsx
+-   components/ProtectedRoute.tsx
+-   components/Signup.tsx
+-   components/Auth.css
+-   contexts/AuthContext.tsx
