@@ -3,6 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const SignUp = () => {
     const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ const SignUp = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { signup } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,13 +46,8 @@ const SignUp = () => {
             // Extract the access token from the response
             const { access_token } = response.data;
 
-            // Store the token in localStorage
-            localStorage.setItem("access_token", access_token);
-
-            // Set the default Authorization header for all future axios requests
-            axios.defaults.headers.common[
-                "Authorization"
-            ] = `Bearer ${access_token}`;
+            // Update authentication state using the context
+            signup(access_token);
 
             // Redirect to the home page or dashboard
             navigate("/");

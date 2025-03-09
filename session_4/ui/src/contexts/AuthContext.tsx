@@ -12,6 +12,8 @@ import axios from "axios";
 interface AuthContextType {
     isAuthenticated: boolean;
     loading: boolean;
+    login: (token: string) => void;
+    signup: (token: string) => void;
     logout: () => void;
 }
 
@@ -34,6 +36,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
+    const login = (token: string) => {
+        // Store the token in localStorage
+        localStorage.setItem("access_token", token);
+
+        // Set the token as the default Authorization header
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        setIsAuthenticated(true);
+    };
+
+    const signup = (token: string) => {
+        // Use the same implementation as login
+        login(token);
+    };
+
     const logout = () => {
         // Remove the token from localStorage
         localStorage.removeItem("access_token");
@@ -45,7 +62,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, loading, logout }}>
+        <AuthContext.Provider
+            value={{ isAuthenticated, loading, login, signup, logout }}
+        >
             {children}
         </AuthContext.Provider>
     );

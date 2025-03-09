@@ -14,6 +14,11 @@ body {
   min-height: 100vh;
 }
 
+/* Smooth transitions for all elements */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
 .auth-container {
   max-width: 480px;
   margin: 4rem auto;
@@ -184,6 +189,18 @@ button.nav-link {
   color: #4a90e2 !important;
   font-weight: 600;
   background-color: rgba(74, 144, 226, 0.08);
+  position: relative;
+}
+
+.active-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0.8rem;
+  right: 0.8rem;
+  height: 2px;
+  background-color: #4a90e2;
+  border-radius: 1px;
 }
 
 .logout-button {
