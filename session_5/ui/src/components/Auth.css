@@ -211,3 +211,28 @@ button.nav-link {
   color: #d32f2f;
   background-color: rgba(229, 57, 53, 0.08);
 }
+
+/* Fix for input text color in dark mode */
+.form-group input {
+  color: #333 !important; /* Force dark text regardless of theme */
+}
+
+/* Ensure placeholder text is visible but slightly lighter */
+.form-group input::placeholder {
+  color: #757575 !important;
+}
+
+/* Apply the same fix to all form inputs throughout the app */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  color: #333 !important;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+  color: #757575 !important;
+}

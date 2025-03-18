@@ -169,6 +169,7 @@ body {
   resize: vertical;
   min-height: 100px;
   background-color: #fafafa;
+  color: #333;
   transition: all 0.3s ease;
 }
 
