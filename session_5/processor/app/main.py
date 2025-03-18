@@ -91,22 +91,6 @@ async def recommend_books(
     return RecommendationResponse(recommendations=recommendations)
 
 
-@app.get("/hello")
-async def hello():
-    logger.info("Hello endpoint accessed")
-    return {"message": "Hello! The Book Recommendation API is up and running."}
-
-
-@app.get("/auth-hello")
-async def auth_hello(token_data: dict = Depends(verify_token)):
-    user_id = token_data.get("sub", "unknown")
-    logger.info(f"Authenticated hello endpoint accessed by user: {user_id}")
-    return {
-        "message": f"Hello, authenticated user! Your user ID is: {user_id}",
-        "token_data": token_data,
-    }
-
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
