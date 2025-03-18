@@ -1011,8 +1011,8 @@ body {
 
 Now, we should be able to run the application and get the book recommendations based on the user's input.
 
-![Screenshot of the new suggest me a book box](screenshot_suggest_box.png.png)
+![Screenshot of the new suggest me a book box](screenshot_suggest_box.png)
 
 And the book recommendations results should show like this:
 
-![Screenshot of the recommendation results](screenshot_recommendation_result.md.png)
+![Screenshot of the recommendation results](screenshot_recommendation_result.png)
