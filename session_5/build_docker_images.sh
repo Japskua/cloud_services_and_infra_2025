@@ -14,3 +14,7 @@ echo "project-backend:dev DONE"
 echo "building project-ui:dev..."
 docker build -f ui/Dockerfile -t project-ui:dev ui/
 echo "project-ui:dev DONE"
+
+echo "building project-processor:dev..."
+docker build -f processor/Dockerfile -t project-processor:dev processor/
+echo "project-processor:dev DONE"

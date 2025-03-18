@@ -1,0 +1,13 @@
+[project]
+name = "processor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.11",
+    "numpy>=2.2.4",
+    "pydantic-settings>=2.8.1",
+    "sentence-transformers>=3.4.1",
+    "uvicorn>=0.34.0",
+]

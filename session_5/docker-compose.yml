@@ -68,6 +68,24 @@ services:
             - "traefik.http.routers.backend.entrypoints=websecure"
             - "traefik.http.routers.backend.tls=true"
             - "traefik.http.services.backend.loadbalancer.server.port=3000"
+
+    processor:
+        image: project-processor:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./processor:/usr/src/app # We want to mount our local backend folder to the container
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # This is the command we want to run. We are now overriding the default command.
+        ports:
+            - "8000:8000" # Open port 8000 to the outside world
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.processor.entrypoints=websecure"
+            - "traefik.http.routers.processor.tls=true"
+            - "traefik.http.services.processor.loadbalancer.server.port=8000"
     postgres:
         image: postgres:17.2
         environment:
