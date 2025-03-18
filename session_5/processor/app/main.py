@@ -1,6 +1,7 @@
 # processor/app/main.py
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt, JWTError
 from app.schemas import RecommendationRequest, RecommendationResponse
 from app.model import get_recommender, BookRecommender
@@ -10,6 +11,15 @@ from app.config import settings, logger
 security = HTTPBearer()
 
 app = FastAPI(title=settings.APP_NAME)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=settings.CORS_METHODS,
+    allow_headers=settings.CORS_HEADERS,
+)
 
 
 # Custom middleware to log requests
