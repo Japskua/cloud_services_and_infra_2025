@@ -1,7 +1,7 @@
 // auth/src/routes/signUpRoute.ts
 
-import Elysia, { t } from "elysia";
-import { UserDTO, userModel, userModelForSignup } from "../models/userModel";
+import Elysia from "elysia";
+import { UserDTO, userModelForSignup } from "../models/userModel";
 import { jwtConfig } from "../config/jwtConfig";
 
 export const signupRouter = new Elysia().use(jwtConfig).post(
