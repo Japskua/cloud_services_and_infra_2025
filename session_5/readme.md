@@ -1016,3 +1016,97 @@ Now, we should be able to run the application and get the book recommendations b
 And the book recommendations results should show like this:
 
 ![Screenshot of the recommendation results](screenshot_recommendation_result.png)
+
+## 3. Set up Nginx to serve the frontend (production-mode)
+
+Okay, now we have the frontend ready to be deployed. We cannot serve the frontend from our local machine nor using the development server. We need to set a production-mode server to serve the frontend. For this, we will be using Nginx. Nginx is a web server that can serve static files. It is a popular choice for serving static files because it is fast and efficient.
+
+For that, we need to create a separate build folder for the frontend. We will be using the `bun run build` command to create the build folder. This will then be served from the nginx server.
+
+To get started, lets try to build the frontend locally first. We already have the build command in the `package.json` file. We can run the following command to build the frontend:
+
+```bash
+cd ui/
+bun run build
+```
+
+This should result in a `dist` folder being created in the `ui` folder. This is the build folder that we will be serving from the nginx server.
+
+Now, we need to create a new folder for the nginx server. We will be using the `nginx` folder for this. We will be using the `nginx` folder to store the nginx configuration files. We will be using the `nginx.conf` file to configure the nginx server.
+
+```bash
+mkdir nginx
+cd nginx
+```
+
+Now, create a new file called `nginx.conf` in the `nginx` folder. This will be the configuration file for the nginx server.
+
+##### `nginx.conf`
+
+```conf
+worker_processes 4;
+
+events { worker_connections 1024; }
+
+http {
+    # what types to include
+    include       /etc/nginx/mime.types;
+    # what is the default one
+    default_type  application/octet-stream;
+    # Remove server tokens (don't show server nginx details)
+    server_tokens off;
+
+    server {
+        listen 8904;
+        server_name $SERVER_AUTH_UI_NAME;
+        add_header Cache-Control "no-store";
+        add_header Content-Security-Policy "default-src 'self';" always;
+
+        # Define the root file
+        root /var/www/app-auth;
+        index index.html index.htm;
+
+        # The actual UI application
+        location / {
+            try_files $uri $uri/ /index.html;
+
+            # kill cache
+            add_header Last-Modified $date_gmt;
+            add_header Cache-Control 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+            if_modified_since off;
+            expires off;
+            etag off;
+        }
+    }
+
+    server {
+        listen 8904;
+        server_name $SERVER_ORKESTRIO_UI_NAME;
+        add_header Cache-Control "no-store";
+        add_header Content-Security-Policy "default-src 'self';" always;
+        # Define the root file
+        root /var/www/app;
+        index index.html index.htm;
+
+        # The actual UI application
+        location / {
+            try_files $uri $uri/ /index.html;
+
+            # kill cache
+            add_header Last-Modified $date_gmt;
+            add_header Cache-Control 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+            if_modified_since off;
+            expires off;
+            etag off;
+        }
+
+        error_page 404 /index.html;
+    }
+}
+```
+
+Remember to give +x permissions to the `init-prod.sh` script.
+
+```bash
+chmod +x init-prod.sh
+```

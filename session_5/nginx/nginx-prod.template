@@ -1,0 +1,35 @@
+worker_processes 4;
+
+events { worker_connections 1024; }
+
+http {
+    # what types to include
+    include       /etc/nginx/mime.types;
+    # what is the default one
+    default_type  application/octet-stream;
+    # Remove server tokens (don't show server nginx details)
+    server_tokens off;
+
+    server {
+        listen 8904;
+        server_name $SERVER_UI_NAME;
+        add_header Content-Security-Policy "
+            default-src 'self';
+            connect-src 'self' https://*.localhost;
+            script-src 'self' 'unsafe-inline' https://*.localhost;
+            style-src 'self' 'unsafe-inline' https://*.localhost;
+            img-src 'self' data: https://*.localhost;
+            font-src 'self' https://*.localhost;
+        " always;
+        # Define the root file
+        root /var/www/app;
+        index index.html index.htm;
+
+        # The actual UI application
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page 404 /index.html;
+    }
+}
