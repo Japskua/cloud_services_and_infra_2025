@@ -1039,9 +1039,9 @@ mkdir nginx
 cd nginx
 ```
 
-Now, create a new file called `nginx.conf` in the `nginx` folder. This will be the configuration file for the nginx server.
+Now, create a new file called `nginx-prod.conf` in the `nginx` folder. This will be the configuration file for the nginx server.
 
-##### `nginx.conf`
+##### `nginx-prod.conf`
 
 ```conf
 worker_processes 4;
@@ -1058,32 +1058,15 @@ http {
 
     server {
         listen 8904;
-        server_name $SERVER_AUTH_UI_NAME;
-        add_header Cache-Control "no-store";
-        add_header Content-Security-Policy "default-src 'self';" always;
-
-        # Define the root file
-        root /var/www/app-auth;
-        index index.html index.htm;
-
-        # The actual UI application
-        location / {
-            try_files $uri $uri/ /index.html;
-
-            # kill cache
-            add_header Last-Modified $date_gmt;
-            add_header Cache-Control 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
-            if_modified_since off;
-            expires off;
-            etag off;
-        }
-    }
-
-    server {
-        listen 8904;
-        server_name $SERVER_ORKESTRIO_UI_NAME;
-        add_header Cache-Control "no-store";
-        add_header Content-Security-Policy "default-src 'self';" always;
+        server_name $SERVER_UI_NAME;
+        add_header Content-Security-Policy "
+            default-src 'self';
+            connect-src 'self' https://*.localhost;
+            script-src 'self' 'unsafe-inline' https://*.localhost;
+            style-src 'self' 'unsafe-inline' https://*.localhost;
+            img-src 'self' data: https://*.localhost;
+            font-src 'self' https://*.localhost;
+        " always;
         # Define the root file
         root /var/www/app;
         index index.html index.htm;
@@ -1091,13 +1074,6 @@ http {
         # The actual UI application
         location / {
             try_files $uri $uri/ /index.html;
-
-            # kill cache
-            add_header Last-Modified $date_gmt;
-            add_header Cache-Control 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
-            if_modified_since off;
-            expires off;
-            etag off;
         }
 
         error_page 404 /index.html;
@@ -1105,8 +1081,232 @@ http {
 }
 ```
 
+Next, we need to create a new file called `init-prod.sh` in the `nginx` folder. This will be the script that we will be using to start the nginx server.
+
+##### `init-prod.sh`
+
+```bash
+
+#!/usr/bin/env bash
+envsubst '$$SERVER_UI_NAME' < /etc/nginx/nginx-prod.conf > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'
+```
+
 Remember to give +x permissions to the `init-prod.sh` script.
 
 ```bash
+cd nginx
 chmod +x init-prod.sh
 ```
+
+Now, we need two Dockerfiles. One that builds the frontend and the other that builds the nginx server. The nginx server Dockerfile will use the image that is built from the frontend Dockerfile.
+
+Let's start with the frontend Dockerfile.
+
+##### `ui/production.Dockerfile`
+
+```dockerfile
+# use the official Bun image
+# see all versions at https://hub.docker.com/r/oven/bun/tags
+FROM oven/bun:1.2.5
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+COPY package*.json .
+RUN bun install
+COPY . .
+RUN bun run build
+```
+
+Now, we need to create a new file called `Dockerfile` in the `nginx` folder. This will be the Dockerfile for the nginx server.
+
+##### `nginx/Dockerfile`
+
+```dockerfile
+FROM public.ecr.aws/nginx/nginx:1.27.4
+LABEL Description="This is a single backend server setting configuration for nginx image"
+RUN rm /etc/nginx/conf.d/default.conf
+COPY init-prod.sh /etc/nginx/init-prod.sh
+COPY nginx-prod.conf /etc/nginx/nginx-prod.conf
+
+# Add the built UI codes here as well
+COPY --from=project-ui:prod /usr/src/app/dist /var/www/app
+```
+
+Notice here on the last line, that we are copying the `dist` folder from the `project-ui:prod` image and mounting it to our `/var/www/app` folder. This is the folder that we will be serving from the nginx server.
+
+Finally, we need to create a new helper file for building the production images. This will later be used to build all production images. For now, we will just be using it to build the nginx server image for production.
+
+##### `build_production_images.sh`
+
+```bash
+#!/bin/bash
+# build_docker_images.sh
+# Builds the docker images for the project
+echo "Starting to build the docker images..."
+
+echo "building project-auth:dev..."
+docker build -f auth/Dockerfile -t project-auth:dev auth/
+echo "project-auth:dev DONE"
+
+echo "building project-backend:dev..."
+docker build -f backend/Dockerfile -t project-backend:dev backend/
+echo "project-backend:dev DONE"
+
+echo "Building the production ui"
+echo "building project-ui:prod..."
+docker build -f ui/production.Dockerfile -t project-ui:prod ui/
+echo "project-ui:prod DONE"
+
+echo "building the project-nginx:prod..."
+docker build -f nginx/Dockerfile -t project-nginx:prod nginx/
+
+echo "building the project-nginx:prod DONE"
+echo "Building the production ui DONE"
+
+echo "building project-processor:dev..."
+docker build -f processor/Dockerfile -t project-processor:dev processor/
+echo "project-processor:dev DONE"
+```
+
+And remember to add +x permissions to the `build_production_images.sh` script.
+
+```bash
+chmod +x build_production_images.sh
+```
+
+Now, we need to create a new file called `docker-compose.prod.yml` in the root folder. This will be the docker-compose file for the production environment.
+
+Notice that there is not longer `ui` service and we have a `nginx` service instead. This is because we are going to be using nginx to serve the frontend.
+
+##### `docker-compose.prod.yml`
+
+```yaml
+services:
+    traefik:
+        image: traefik:v3.3.3
+        command:
+            - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
+        volumes:
+            - ./traefik/traefik.toml:/app/configs/traefik.toml:ro # We want to mount our local traefik.toml file
+            - ./traefik/dynamic_conf.toml:/app/configs/dynamic_conf.toml:ro # We want to mount our local dynamic_conf.toml file
+            - ./traefik/certs:/certs:ro # We are adding the certificates to the container as read only (:ro)
+            - /var/run/docker.sock:/var/run/docker.sock:rw
+        labels:
+            - "traefik.enable=true" # We enable traefik for this service
+            - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # This is the traefik service URL
+            - "traefik.http.routers.traefik.entrypoints=websecure" # We want to use websecure as entrypoint (HTTPS)
+            - "traefik.http.routers.traefik.tls=true" # Enable the HTTPS router
+            - "traefik.http.routers.traefik.service=api@internal" # This is just internal configuration
+        environment:
+            - TZ=Europe/Helsinki # Lets set the environment variable TZ to Europe/Helsinki
+        ports:
+            - "80:80" # Open port 80 to the outside world
+            - "443:443" # Open port 443 to the outside world
+        networks:
+            - cloud_project # And we use this network to connect to the other services
+
+    auth:
+        image: project-auth:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./auth:/usr/src/app # We want to mount our local auth folder to the container
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun dev # This is the command we want to run. We are now overriding the default command.
+        environment:
+            - PORT=3001 # We want to set the port in the environment variables
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.auth.rule=Host(`auth.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.auth.entrypoints=websecure"
+            - "traefik.http.routers.auth.tls=true"
+            - "traefik.http.services.auth.loadbalancer.server.port=3001"
+    nginx:
+        image: project-nginx:prod # This is the image we have built for production. If missing, check build_production_images.sh
+        restart: always
+        command: /bin/sh -c /etc/nginx/init-prod.sh
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        depends_on:
+            - traefik
+            - backend
+            - processor
+        environment:
+            - SERVER_UI_NAME=app.localhost
+            - TZ=Europe/Helsinki
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.nginx.rule=Host(`app.localhost`)" # This is the nginx ui service URL
+            - "traefik.http.routers.nginx.entrypoints=websecure"
+            - "traefik.http.routers.nginx.tls=true"
+            - "traefik.http.services.nginx.loadbalancer.server.port=8904"
+    backend:
+        image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./backend:/usr/src/app # We want to mount our local backend folder to the container
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: bun run dev # This is the command we want to run. We are now overriding the default command.
+        environment:
+            - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.backend.entrypoints=websecure"
+            - "traefik.http.routers.backend.tls=true"
+            - "traefik.http.services.backend.loadbalancer.server.port=3000"
+
+    processor:
+        image: project-processor:dev # This is the image we have built. If missing, check build_images.sh
+        volumes:
+            - ./processor:/usr/src/app # We want to mount our local backend folder to the container
+        networks:
+            - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+        command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # This is the command we want to run. We are now overriding the default command.
+        ports:
+            - "8000:8000" # Open port 8000 to the outside world
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
+            - "traefik.http.routers.processor.entrypoints=websecure"
+            - "traefik.http.routers.processor.tls=true"
+            - "traefik.http.services.processor.loadbalancer.server.port=8000"
+    postgres:
+        image: postgres:17.2
+        environment:
+            - TZ=Europe/Helsinki
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=projectdb
+        volumes:
+            - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./db_data:/var/lib/postgresql/data
+        healthcheck: # Hey! We are checking that the postgres is up and running!
+            test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.postgres.rule=Host(`postgres.localhost`)"
+            - "traefik.http.routers.postgres.entrypoints=websecure"
+            - "traefik.http.routers.postgres.tls=true"
+            - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+        networks:
+            - cloud_project
+
+networks:
+    cloud_project:
+        name: cloud_project # We are creating a network with the name cloud_project
+        driver: bridge # We are using the bridge driver
+```
+
+Now, we should be able to build the images and run the new `docker-compose-prod.yml` file.
+
+```bash
+./build_production_images.sh
+```
+
+And then do the regular `docker-compose up` for the production compose file.
