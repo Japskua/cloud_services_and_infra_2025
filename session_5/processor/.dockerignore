@@ -1,0 +1,75 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv
+.uv/
+
+# Unit tests
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+pytest-report.xml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE-specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Documentation
+README.md
+LICENSE
+docs/
+*.md
+
+# Logs
+*.log
+logs/
+
+# Local development
+*.local
+docker-compose.yml
+docker-compose.*.yml
+
+# Test script
+test_api.py
+
+# Don't ignore these
+!requirements.txt

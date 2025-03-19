@@ -1,0 +1,92 @@
+[
+    {
+        "title": "The Great Gatsby",
+        "author": "F. Scott Fitzgerald",
+        "year": 1925,
+        "genre": "Classic",
+        "isbn": "9780743273565",
+        "description": "A story of wealth, love, and the American Dream in the Jazz Age",
+        "pages": 180
+    },
+    {
+        "title": "To Kill a Mockingbird",
+        "author": "Harper Lee",
+        "year": 1960,
+        "genre": "Fiction",
+        "isbn": "9780061120084",
+        "description": "A story about racial inequality and moral growth in the American South",
+        "pages": 281
+    },
+    {
+        "title": "1984",
+        "author": "George Orwell",
+        "year": 1949,
+        "genre": "Dystopian",
+        "isbn": "9780451524935",
+        "description": "A dystopian social science fiction novel set in a totalitarian future",
+        "pages": 328
+    },
+    {
+        "title": "The Hobbit",
+        "author": "J.R.R. Tolkien",
+        "year": 1937,
+        "genre": "Fantasy",
+        "isbn": "9780618260300",
+        "description": "A fantasy novel about the adventures of a hobbit named Bilbo Baggins",
+        "pages": 310
+    },
+    {
+        "title": "Pride and Prejudice",
+        "author": "Jane Austen",
+        "year": 1813,
+        "genre": "Romance",
+        "isbn": "9780141439518",
+        "description": "A romantic novel of manners focusing on the Bennet family",
+        "pages": 432
+    },
+    {
+        "title": "The Catcher in the Rye",
+        "author": "J.D. Salinger",
+        "year": 1951,
+        "genre": "Coming-of-age",
+        "isbn": "9780316769488",
+        "description": "A story about teenage angst and alienation",
+        "pages": 277
+    },
+    {
+        "title": "Brave New World",
+        "author": "Aldous Huxley",
+        "year": 1932,
+        "genre": "Dystopian",
+        "isbn": "9780060850524",
+        "description": "A dystopian novel set in a futuristic World State",
+        "pages": 311
+    },
+    {
+        "title": "The Lord of the Rings",
+        "author": "J.R.R. Tolkien",
+        "year": 1954,
+        "genre": "Fantasy",
+        "isbn": "9780618640157",
+        "description": "An epic high-fantasy novel",
+        "pages": 1178
+    },
+    {
+        "title": "Harry Potter and the Philosophers Stone",
+        "author": "J.K. Rowling",
+        "year": 1997,
+        "genre": "Fantasy",
+        "isbn": "9780747532743",
+        "description": "The first novel in the Harry Potter series",
+        "pages": 223
+    },
+    {
+        "title": "The Hunger Games",
+        "author": "Suzanne Collins",
+        "year": 2008,
+        "genre": "Dystopian",
+        "isbn": "9780439023481",
+        "description": "A dystopian novel set in a post-apocalyptic nation",
+        "pages": 374
+    }
+]
