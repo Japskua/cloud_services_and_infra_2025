@@ -1,4 +1,4 @@
-# Cloud Services & Infrastructure - Session 4 - Authentication system
+# Cloud Services & Infrastructure - Session 5 - Python microservice & productionize frontend
 
 Goal: Introduce long-running microservice & productionize frontend
 Topics & Hands-on:
