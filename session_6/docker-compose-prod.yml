@@ -23,14 +23,10 @@ services:
             - cloud_project # And we use this network to connect to the other services
 
     auth:
-        image: project-auth:dev # This is the image we have built. If missing, check build_images.sh
-        volumes:
-            - ./auth:/usr/src/app # We want to mount our local auth folder to the container
+        image: project-auth:prod # This is the image we have built. If missing, check build_production_images.sh
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
-        command: bun dev # This is the command we want to run. We are now overriding the default command.
         environment:
-            - PORT=3001 # We want to set the port in the environment variables
             - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
         labels:
             - "traefik.enable=true"
@@ -58,12 +54,9 @@ services:
             - "traefik.http.routers.nginx.tls=true"
             - "traefik.http.services.nginx.loadbalancer.server.port=8904"
     backend:
-        image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
-        volumes:
-            - ./backend:/usr/src/app # We want to mount our local backend folder to the container
+        image: project-backend:prod # This is the image we have built. If missing, check build_production_images.sh
         networks:
             - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
-        command: bun run dev # This is the command we want to run. We are now overriding the default command.
         environment:
             - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
             - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!

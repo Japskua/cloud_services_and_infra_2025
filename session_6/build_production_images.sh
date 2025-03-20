@@ -3,13 +3,13 @@
 # Builds the docker images for the project
 echo "Starting to build the docker images..."
 
-echo "building project-auth:dev..."
-docker build -f auth/Dockerfile -t project-auth:dev auth/
-echo "project-auth:dev DONE"
+echo "building project-auth:prod..."
+docker build -f auth/production.Dockerfile -t project-auth:prod auth/
+echo "project-auth:prod DONE"
 
-echo "building project-backend:dev..."
-docker build -f backend/Dockerfile -t project-backend:dev backend/
-echo "project-backend:dev DONE"
+echo "building project-backend:prod..."
+docker build -f backend/production.Dockerfile -t project-backend:prod backend/
+echo "project-backend:prod DONE"
 
 echo "Building the production ui"
 echo "building project-ui:prod..."
