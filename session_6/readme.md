@@ -20,8 +20,8 @@ First, we should make sure the bun commands work on your local machine. Let's te
 
 ```bash
 cd auth
-bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile auth
-./auth
+bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile bin/auth
+./bin/auth
 ```
 
 This should start your application. If you navigate to `http://localhost:3001/` you should see the hello message from auth.
