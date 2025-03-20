@@ -96,12 +96,71 @@ RUN chmod +x /app/bin/backend
 CMD ["/app/bin/backend"]
 ```
 
-Now, lets update the `build_production_images.sh` script to build the production-ready Docker images for the `auth` and `backend` services.
+### 1.2. Creating a production-ready Docker image for the `processor` service
+
+This follows quite the same pattern as the other two services.
+
+##### `processor/production.Dockerfile`
+
+```Dockerfile
+# Stage 1: Builder - Installs dependencies
+FROM python:3.12-slim-bookworm AS builder
+
+# Install necessary system dependencies for building
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy uv from the official image
+COPY --from=ghcr.io/astral-sh/uv:0.6.7 /uv /uvx /bin/
+
+# Set work directory
+WORKDIR /usr/src/app
+
+# Set UV_LINK_MODE to copy to allow mounting
+ENV UV_LINK_MODE=copy
+
+# Copy dependency files first for better caching
+COPY pyproject.toml .
+COPY uv.lock* ./
+
+# Install dependencies without installing the project (cache optimized)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-install-project
+
+# Copy project files
+COPY . .
+
+# Sync and compile bytecode
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --compile-bytecode
+
+# Remove build dependencies to reduce image size
+RUN apt-get remove -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for security
+RUN useradd -m -d /usr/src/app appuser && \
+    chown -R appuser:appuser /usr/src/app
+
+# Switch to the non-root user
+USER appuser
+
+# Define the command
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### 1.3. Building and testing all services locally
+
+Now, lets update the `build_production_images.sh` script to build the production-ready Docker images for the new services.
 
 ##### `build_production_images.sh`
 
 ```bash
-# Start is omitted
+#!/bin/bash
+# build_docker_images.sh
+# Builds the docker images for the project
+echo "Starting to build the docker images..."
+
 echo "building project-auth:prod..."
 docker build -f auth/production.Dockerfile -t project-auth:prod auth/
 echo "project-auth:prod DONE"
@@ -109,7 +168,20 @@ echo "project-auth:prod DONE"
 echo "building project-backend:prod..."
 docker build -f backend/production.Dockerfile -t project-backend:prod backend/
 echo "project-backend:prod DONE"
-# continues like the old part...
+
+echo "Building the production ui"
+echo "building project-ui:prod..."
+docker build -f ui/production.Dockerfile -t project-ui:prod ui/
+echo "project-ui:prod DONE"
+
+echo "building the project-nginx:prod..."
+docker build -f nginx/Dockerfile -t project-nginx:prod nginx/
+echo "building the project-nginx:prod DONE"
+echo "Building the production ui DONE"
+
+echo "building project-processor:prod..."
+docker build -f processor/production.Dockerfile -t project-processor:prod processor/
+echo "project-processor:prod DONE"
 ```
 
 Now, we should be able to run these with the docker-compose. Let's update and try it
@@ -120,29 +192,60 @@ Now, we should be able to run these with the docker-compose. Let's update and tr
 auth:
     image: project-auth:prod # This is the image we have built. If missing, check build_production_images.sh
     networks:
-        - cloud_project
+        - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
     environment:
-        - JWT_SECRET=secret
+        - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
     labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
+        - "traefik.http.routers.auth.rule=Host(`auth.localhost`)" # This is the backend service URL
         - "traefik.http.routers.auth.entrypoints=websecure"
         - "traefik.http.routers.auth.tls=true"
         - "traefik.http.services.auth.loadbalancer.server.port=3001"
-
-backend:
-    image: project-backend:prod
+nginx:
+    image: project-nginx:prod # This is the image we have built for production. If missing, check build_production_images.sh
+    restart: always
+    command: /bin/sh -c /etc/nginx/init-prod.sh
     networks:
-        - cloud_project
+        - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    depends_on:
+        - traefik
+        - backend
+        - processor
     environment:
-        - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb
-        - JWT_SECRET=secret
+        - SERVER_UI_NAME=app.localhost
+        - TZ=Europe/Helsinki
     labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.backend.rule=Host(`backend.localhost`)"
+        - "traefik.http.routers.nginx.rule=Host(`app.localhost`)" # This is the nginx ui service URL
+        - "traefik.http.routers.nginx.entrypoints=websecure"
+        - "traefik.http.routers.nginx.tls=true"
+        - "traefik.http.services.nginx.loadbalancer.server.port=8904"
+backend:
+    image: project-backend:prod # This is the image we have built. If missing, check build_production_images.sh
+    networks:
+        - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    environment:
+        - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+        - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.rule=Host(`backend.localhost`)" # This is the backend service URL
         - "traefik.http.routers.backend.entrypoints=websecure"
         - "traefik.http.routers.backend.tls=true"
         - "traefik.http.services.backend.loadbalancer.server.port=3000"
+
+processor:
+    image: project-processor:prod # This is the image we have built. If missing, check build_production_images.sh
+    networks:
+        - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    environment:
+        - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
+        - "traefik.http.routers.processor.entrypoints=websecure"
+        - "traefik.http.routers.processor.tls=true"
+        - "traefik.http.services.processor.loadbalancer.server.port=8000"
 ```
 
 ## 2. Writing a GitHub Actions workflow for backend/frontend

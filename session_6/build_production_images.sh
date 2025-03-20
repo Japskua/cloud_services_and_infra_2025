@@ -18,7 +18,6 @@ echo "project-ui:prod DONE"
 
 echo "building the project-nginx:prod..."
 docker build -f nginx/Dockerfile -t project-nginx:prod nginx/
-
 echo "building the project-nginx:prod DONE"
 echo "Building the production ui DONE"
 
