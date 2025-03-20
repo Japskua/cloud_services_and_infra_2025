@@ -1,4 +1,4 @@
-# Use a lightweight Python base image
+# Stage 1: Builder - Installs dependencies
 FROM python:3.12-slim-bookworm AS builder
 
 # Install necessary system dependencies for building
@@ -12,10 +12,10 @@ COPY --from=ghcr.io/astral-sh/uv:0.6.7 /uv /uvx /bin/
 # Set work directory
 WORKDIR /usr/src/app
 
-# Set the UV_LINK_MODE to copy to enable local mounting
+# Set UV_LINK_MODE to copy to allow mounting
 ENV UV_LINK_MODE=copy
 
-# Copy dependency files
+# Copy dependency files first for better caching
 COPY pyproject.toml .
 COPY uv.lock* ./
 
@@ -40,11 +40,5 @@ RUN useradd -m -d /usr/src/app appuser && \
 # Switch to the non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8000
-
-# Add virtual environment to the path
-ENV PATH="/usr/src/app/.venv/bin:$PATH"
-
 # Define the command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
