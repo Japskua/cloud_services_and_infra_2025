@@ -145,3 +145,32 @@ backend:
         - "traefik.http.routers.backend.tls=true"
         - "traefik.http.services.backend.loadbalancer.server.port=3000"
 ```
+
+## 2. Writing a GitHub Actions workflow for backend/frontend
+
+First, we need to configure us to enable GitHub Actions to access our GitHub Container Registry (GHCR).
+
+🔧 Step 1: Enable GitHub Actions Access to GHCR
+
+1. Go to your GitHub Account Settings:
+    - Open GitHub Settings: https://github.com/settings/profile.
+2. Navigate to Developer Settings → Personal Access Tokens (PATs):
+    - Go to Settings → Developer settings → Personal access tokens → Tokens (classic)
+    - Click Generate new token (fine-grained does not have packages).
+3. Set the Token Scope:
+    - Expiration: Choose a reasonable expiration (or no expiration if needed).
+    - Scopes: Select:
+        - ✅ read:packages
+        - ✅ write:packages
+        - ✅ delete:packages (optional if you want to remove old images
+4. Generate and copy the token.
+    - Store this token securely.
+
+🔧 Step 2: Add the Token as a Secret in Your Repository
+
+1. Go to your GitHub repository.
+2. Open Settings → Secrets and variables → Actions.
+3. Click New repository secret.
+4. Name it GHCR_PAT.
+5. Paste the Personal Access Token (PAT) you generated.
+6. Click Save.

@@ -3,6 +3,10 @@ name: Build and Push Auth Docker Image
 on:
     push:
 
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
 jobs:
     build-docker:
         runs-on: ubuntu-latest
@@ -20,7 +24,7 @@ jobs:
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+                  password: ${{ secrets.GHCR_PAT }}
 
             - name: Extract and sanitize branch name
               run: |
