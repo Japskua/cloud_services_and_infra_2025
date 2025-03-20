@@ -174,3 +174,98 @@ First, we need to configure us to enable GitHub Actions to access our GitHub Con
 4. Name it GHCR_PAT.
 5. Paste the Personal Access Token (PAT) you generated.
 6. Click Save.
+
+### Creating a GitHub Actions Workflow
+
+#### Automatically Building Auth Service
+
+First, let's create by doing one build for the `auth` service. Create a new file called `.github/workflows/build_auth_docker.yaml` (notice we are creating a folder called `.github` in the root of our project!).
+
+##### `.github/workflows/build_auth_docker.yaml`
+
+```yaml
+name: Build and Push Auth Docker Image
+
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
+jobs:
+    build-docker:
+        runs-on: ubuntu-latest
+        if: contains(github.event.head_commit.message, '[build-auth]') || contains(github.event.head_commit.message, '[build-all]')
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GitHub Container Registry (GHCR)
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GHCR_PAT }}
+
+            - name: Extract and sanitize branch name
+              run: |
+                  # Convert repository owner to lowercase
+                  REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                  echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+
+                  # Get branch name, replace '/' and '_' with '-', and convert to lowercase
+                  SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
+
+            - name: Build Docker Image
+              run: |
+                  docker build -f session_6/auth/production.Dockerfile \
+                    -t ghcr.io/${{ env.REPO_OWNER }}/project-auth:${{ env.BRANCH_NAME }} \
+                    session_6/auth/
+
+            - name: Push Docker Image to GHCR
+              run: |
+                  docker push ghcr.io/${{ env.REPO_OWNER }}/project-auth:${{ env.BRANCH_NAME }}
+```
+
+This will build our auth docker image whenever our commit message contains ['build-auth'] or ['build-all'].
+
+Let's try this immediately! Commit and push with the message `[build-auth]`.
+
+#### Automatically Building Nginx Service
+
+##### `.github/workflows/build_nginx_docker.yaml`
+
+```yaml
+
+```
+
+#### Automatically Building Processor Service
+
+##### `.github/workflows/build_processor_docker.yaml`
+
+```yaml
+
+```
+
+#### Automatically Building Backend Service
+
+##### `.github/workflows/build_backend_docker.yaml`
+
+```yaml
+
+```
+
+### Making the packages public
+
+By default, the GitHub Container Registry (GHCR) packages are private. To make them public, you need to follow these steps:
+
+1. Go to your packages tab: https://github.com/<username>?tab=packages
+2. Open the package you want to make public.
+3. Click on the Package Settings button.
+4. Change the Visibility to Public.
