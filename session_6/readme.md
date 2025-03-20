@@ -4,8 +4,7 @@ Goal: Automate deployments using CI/CD.
 Topics & Hands-on:
 
 1. Creating production-ready Docker images for all our services
-2. Writing a GitHub Actions workflow for backend/frontend
-3. Automating Docker builds and pushes
+2. Writing a GitHub Actions workflow for automating Docker builds and pushes
 
 **Project Task:** Project Task: Teams set up CI/CD for automated builds.
 
@@ -242,7 +241,59 @@ Let's try this immediately! Commit and push with the message `[build-auth]`.
 ##### `.github/workflows/build_nginx_docker.yaml`
 
 ```yaml
+name: Build and Push Nginx Docker Image
 
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
+jobs:
+    build-docker:
+        runs-on: ubuntu-latest
+        if: contains(github.event.head_commit.message, '[build-nginx]') || contains(github.event.head_commit.message, '[build-all]')
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GitHub Container Registry (GHCR)
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GHCR_PAT }}
+
+            - name: Extract and sanitize branch name
+              run: |
+                  # Convert repository owner to lowercase
+                  REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                  echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+
+                  # Get branch name, replace '/' and '_' with '-', and convert to lowercase
+                  SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
+
+            - name: Build UI Docker Image
+              run: |
+                  docker build -f session_6/ui/production.Dockerfile \
+                    -t project-ui:prod \
+                    session_6/ui/
+
+            - name: Build Nginx Docker Image (Uses UI)
+              run: |
+                  docker build -f session_6/nginx/Dockerfile \
+                    -t ghcr.io/${{ env.REPO_OWNER }}/project-nginx:${{ env.BRANCH_NAME }} \
+                    session_6/nginx/
+
+            - name: Push Docker Image to GHCR
+              run: |
+                  docker push ghcr.io/${{ env.REPO_OWNER }}/project-nginx:${{ env.BRANCH_NAME }}
 ```
 
 #### Automatically Building Processor Service
@@ -250,7 +301,53 @@ Let's try this immediately! Commit and push with the message `[build-auth]`.
 ##### `.github/workflows/build_processor_docker.yaml`
 
 ```yaml
+name: Build and Push Processor Docker Image
 
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
+jobs:
+    build-docker:
+        runs-on: ubuntu-latest
+        if: contains(github.event.head_commit.message, '[build-processor]') || contains(github.event.head_commit.message, '[build-all]')
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GitHub Container Registry (GHCR)
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GHCR_PAT }}
+
+            - name: Extract and sanitize branch name
+              run: |
+                  # Convert repository owner to lowercase
+                  REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                  echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+
+                  # Get branch name, replace '/' and '_' with '-', and convert to lowercase
+                  SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
+
+            - name: Build Docker Image
+              run: |
+                  docker build -f session_6/processor/production.Dockerfile \
+                    -t ghcr.io/${{ env.REPO_OWNER }}/project-processor:${{ env.BRANCH_NAME }} \
+                    session_6/processor/
+
+            - name: Push Docker Image to GHCR
+              run: |
+                  docker push ghcr.io/${{ env.REPO_OWNER }}/project-processor:${{ env.BRANCH_NAME }}
 ```
 
 #### Automatically Building Backend Service
@@ -258,7 +355,53 @@ Let's try this immediately! Commit and push with the message `[build-auth]`.
 ##### `.github/workflows/build_backend_docker.yaml`
 
 ```yaml
+name: Build and Push Backend Docker Image
 
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
+jobs:
+    build-docker:
+        runs-on: ubuntu-latest
+        if: contains(github.event.head_commit.message, '[build-backend]') || contains(github.event.head_commit.message, '[build-all]')
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GitHub Container Registry (GHCR)
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GHCR_PAT }}
+
+            - name: Extract and sanitize branch name
+              run: |
+                  # Convert repository owner to lowercase
+                  REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                  echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+
+                  # Get branch name, replace '/' and '_' with '-', and convert to lowercase
+                  SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
+
+            - name: Build Docker Image
+              run: |
+                  docker build -f session_6/backend/production.Dockerfile \
+                    -t ghcr.io/${{ env.REPO_OWNER }}/project-backend:${{ env.BRANCH_NAME }} \
+                    session_6/backend/
+
+            - name: Push Docker Image to GHCR
+              run: |
+                  docker push ghcr.io/${{ env.REPO_OWNER }}/project-backend:${{ env.BRANCH_NAME }}
 ```
 
 ### Making the packages public
