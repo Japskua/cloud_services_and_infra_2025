@@ -22,6 +22,6 @@ docker build -f nginx/Dockerfile -t project-nginx:prod nginx/
 echo "building the project-nginx:prod DONE"
 echo "Building the production ui DONE"
 
-echo "building project-processor:dev..."
-docker build -f processor/Dockerfile -t project-processor:dev processor/
-echo "project-processor:dev DONE"
+echo "building project-processor:prod..."
+docker build -f processor/production.Dockerfile -t project-processor:prod processor/
+echo "project-processor:prod DONE"
