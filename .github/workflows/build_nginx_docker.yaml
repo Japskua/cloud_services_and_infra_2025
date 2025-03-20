@@ -36,7 +36,13 @@ jobs:
                   SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
                   echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
 
-            - name: Build Docker Image
+            - name: Build UI Docker Image
+              run: |
+                  docker build -f session_6/ui/production.Dockerfile \
+                    -t project-ui:prod \
+                    session_6/ui/
+
+            - name: Build Nginx Docker Image (Uses UI)
               run: |
                   docker build -f session_6/nginx/Dockerfile \
                     -t ghcr.io/${{ env.REPO_OWNER }}/project-nginx:${{ env.BRANCH_NAME }} \
