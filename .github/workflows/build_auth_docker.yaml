@@ -1,0 +1,47 @@
+name: Build and Push Auth Docker Image
+
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write # Ensures GitHub Actions can push packages
+
+jobs:
+    build-docker:
+        runs-on: ubuntu-latest
+        if: contains(github.event.head_commit.message, '[build-auth]') || contains(github.event.head_commit.message, '[build-all]')
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GitHub Container Registry (GHCR)
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GHCR_PAT }}
+
+            - name: Extract and sanitize branch name
+              run: |
+                  # Convert repository owner to lowercase
+                  REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                  echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+
+                  # Get branch name, replace '/' and '_' with '-', and convert to lowercase
+                  SANITIZED_BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/_' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "BRANCH_NAME=$SANITIZED_BRANCH" >> $GITHUB_ENV
+
+            - name: Build Docker Image
+              run: |
+                  docker build -f session_6/auth/production.Dockerfile \
+                    -t ghcr.io/${{ env.REPO_OWNER }}/project-auth:${{ env.BRANCH_NAME }} \
+                    session_6/auth/
+
+            - name: Push Docker Image to GHCR
+              run: |
+                  docker push ghcr.io/${{ env.REPO_OWNER }}/project-auth:${{ env.BRANCH_NAME }}
