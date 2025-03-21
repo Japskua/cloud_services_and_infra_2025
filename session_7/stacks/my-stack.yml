@@ -1,0 +1,133 @@
+services:
+    auth:
+        image: docker pull ghcr.io/japskua/project-auth:main
+        networks:
+            - app_network
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.auth.rule=Host(`auth.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.auth.entrypoints=websecure"
+              - "traefik.http.routers.auth.tls=true"
+              - "traefik.http.services.auth.loadbalancer.server.port=3001"
+        
+    nginx:
+        image: docker pull ghcr.io/japskua/project-nginx:main
+        command: /bin/sh -c /etc/nginx/init-prod.sh
+        networks:
+            - app_network
+        environment:
+            - SERVER_UI_NAME=app.myservice.com # Remember to change URL
+            - TZ=Europe/Helsinki
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.nginx.rule=Host(`app.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.nginx.entrypoints=websecure"
+              - "traefik.http.routers.nginx.tls=true"
+              - "traefik.http.services.nginx.loadbalancer.server.port=8904"
+        
+    backend:
+        image: docker pull ghcr.io/japskua/project-backend:main
+        networks:
+            - app_network
+        environment:
+            - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.backend.rule=Host(`backend.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.backend.entrypoints=websecure"
+              - "traefik.http.routers.backend.tls=true"
+              - "traefik.http.services.backend.loadbalancer.server.port=3000"
+        
+
+    processor:
+        image: docker pull ghcr.io/japskua/project-processor:main
+        networks:
+            - app_network
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.processor.rule=Host(`processor.myservice.com`)" # Remember to change this!
+              - "traefik.http.routers.processor.entrypoints=websecure"
+              - "traefik.http.routers.processor.tls=true"
+              - "traefik.http.services.processor.loadbalancer.server.port=8000"
+        
+    postgres:
+        image: postgres:17.2
+        networks:
+            - app_network
+        environment:
+            - TZ=Europe/Helsinki
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=projectdb
+        volumes:
+            - "postgres_data:/var/lib/postgresql/data"
+        healthcheck: # Hey! We are checking that the postgres is up and running!
+            test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.postgres.rule=Host(`postgres.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.postgres.entrypoints=websecure"
+              - "traefik.http.routers.postgres.tls=true"
+              - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+        
+        
+
+networks:
+  app_network:
+    external: true
+
+volumes:
+  postgres_data:
+    external: true

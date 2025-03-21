@@ -306,14 +306,16 @@ We cannot store sensitive information in our docker-compose files. So, we will n
 1. Navigate to Secrets -> Add secret
 2. Create a new secret, naming it `do_token`. Put the token you created in the previous step.
 3. Add another new secret, name it `traefik_users`. This will contain the login credentials for traefik. Format: `username:password`.
+    - In order to do this, run the command `htpasswd -nbB myuser mypassword`. This will create a hash for the password.
 4. Add another new secret, name it `prometheus_users`. This will contain the login credentials for prometheus (monitoring, that we will introduce later). Format: `username:password`.
+    -   - In order to do this, run the command `htpasswd -nbB myuser mypassword`. This will create a hash for the password.
 
 ### 2.4 Creating the traefik stack
 
 Now, we are going to create a stack for traefik. Instead of having ALL our services in one yaml stack file, it is nicer to deploy these separately. We will deploy the traefik stack first, and then the other services.
 
 1. Navigate to Stacks -> Add Stack
-2. Name the stackk `traefik-stack`
+2. Name the stack `traefik-stack`
 3. Paste the following content into the yaml file. (Make sure to change the URL properly)
 4. After this, you should be able to log in from the address https://traefik.myservice.com
 
@@ -404,3 +406,21 @@ networks:
     app_network:
         external: true
 ```
+
+### 2.5 Deploying our own stack
+
+Now, we have working docker-swarm, portainer for management and traefik for routing. We can now finally deploy our own stack.
+
+Notice, that from now on, we will be using the portainer UI at the HTTPS://<MY_URL> address, instead of the IP-address.
+
+So, now to deploy our stacks.
+
+1. Navigate to Stacks -> Add Stack
+2. Name the stack `my-stack` (or whatever you want)
+3. Paste the application content into the yaml file. (Make sure to change the URL properly)
+
+###### my-stack.yml
+
+This is so long file, so go and check from the current repository's `session_7/stacks/my-stack.yml` file.
+
+If you go everything correct, we should have a working application. Congratulations! Such wow!
