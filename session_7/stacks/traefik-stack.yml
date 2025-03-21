@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.11.21
+    image: public.ecr.aws/docker/library/traefik:v2.11.21
     logging:
       options:
         max-size: 50m

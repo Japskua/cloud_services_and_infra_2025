@@ -1,6 +1,6 @@
 services:
     auth:
-        image: docker pull ghcr.io/japskua/project-auth:main
+        image: ghcr.io/japskua/project-auth:main
         networks:
             - app_network
         environment:
@@ -21,7 +21,7 @@ services:
               - "traefik.http.services.auth.loadbalancer.server.port=3001"
         
     nginx:
-        image: docker pull ghcr.io/japskua/project-nginx:main
+        image: ghcr.io/japskua/project-nginx:main
         command: /bin/sh -c /etc/nginx/init-prod.sh
         networks:
             - app_network
@@ -43,7 +43,7 @@ services:
               - "traefik.http.services.nginx.loadbalancer.server.port=8904"
         
     backend:
-        image: docker pull ghcr.io/japskua/project-backend:main
+        image: ghcr.io/japskua/project-backend:main
         networks:
             - app_network
         environment:
@@ -69,7 +69,7 @@ services:
         
 
     processor:
-        image: docker pull ghcr.io/japskua/project-processor:main
+        image: ghcr.io/japskua/project-processor:main
         networks:
             - app_network
         environment:
@@ -93,7 +93,7 @@ services:
               - "traefik.http.services.processor.loadbalancer.server.port=8000"
         
     postgres:
-        image: postgres:17.2
+        image: public.ecr.aws/docker/library/postgres:17.2
         networks:
             - app_network
         environment:

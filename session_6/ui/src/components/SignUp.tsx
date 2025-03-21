@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getServiceUrl } from "../helpers/urlHelper";
 
 const SignUp = () => {
     const [email, setEmail] = useState("");
@@ -37,8 +38,10 @@ const SignUp = () => {
             setLoading(true);
             setError(null);
 
+            const authAddress = getServiceUrl("auth");
+
             // Send signup request to the auth server
-            const response = await axios.post("https://auth.localhost/signup", {
+            const response = await axios.post(`${authAddress}/signup`, {
                 email,
                 password
             });

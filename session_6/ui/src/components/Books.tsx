@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { getServiceUrl } from "../helpers/urlHelper";
 
 // Define the Book interface to type our data
 interface Book {
@@ -42,9 +43,11 @@ const Books = () => {
         // Function to fetch books from the API
         const fetchBooks = async () => {
             try {
+                const backendAddress = getServiceUrl("backend");
+
                 setLoading(true);
                 const response = await axios.get<Book[]>(
-                    "https://backend.localhost/books"
+                    `${backendAddress}/books`
                 );
                 setBooks(response.data);
                 setError(null);
@@ -72,9 +75,11 @@ const Books = () => {
             setRecommending(true);
             setRecommendError(null);
 
+            const processorAddress = getServiceUrl("processor");
+
             // Call the recommendation service
             const response = await axios.post(
-                "https://processor.localhost/recommend",
+                `${processorAddress}/recommend`,
                 { text: userPreference },
                 {
                     headers: {

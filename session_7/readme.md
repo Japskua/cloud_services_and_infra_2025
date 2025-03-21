@@ -8,7 +8,7 @@ Topics & Hands-on:
 
 **Project Task:** Project Task: Teams deploy to a cloud server.
 
-0. Prerequisites
+## 0. Prerequisites
 
 In order to continue, you need to have a working production version of the system, and a place where to store the Docker images. If you have followed the sessions so far, you should have GitHub Container Registry, with working production Docker images for deployment.
 
