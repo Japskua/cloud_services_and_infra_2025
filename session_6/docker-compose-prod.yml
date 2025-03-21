@@ -46,6 +46,7 @@ services:
             - processor
         environment:
             - SERVER_UI_NAME=app.localhost
+            - CSP_DOMAIN=*.localhost
             - TZ=Europe/Helsinki
         labels:
             - "traefik.enable=true"
