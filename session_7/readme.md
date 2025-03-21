@@ -19,7 +19,7 @@ You can get cheap domain like `blueblackgreenorange.biz` or something for 1-5 do
 ## 1. Setting up Docker Swarm on a cloud server
 
 Now, we finally get to the point of setting up the full system and getting it to work online, in a real production environment.
-For this tutorial, you can use any cloud provider you want. I will be demonstrating this using Digital Ocean, as it is easy to use.
+For this tutorial, I will be demonstrating this using Digital Ocean, as it is easy to use. You can use whatever you want, but some steps of this tutorial will not apply to your cloud provider.
 
 You can use the referral code below to get $200 in credit for Digital Ocean.
 Referral Code: https://m.do.co/c/a6ede09eeb46
