@@ -28,6 +28,7 @@ services:
             - app_network
         environment:
             - SERVER_UI_NAME=app.myservice.com # Remember to change URL
+            - CSP_DOMAIN=*.myservice.com
             - TZ=Europe/Helsinki
         deploy:
             mode: replicated
