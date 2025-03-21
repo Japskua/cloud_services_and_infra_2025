@@ -1,6 +1,12 @@
 services:
     auth:
         image: docker pull ghcr.io/japskua/project-auth:main
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=auth,image_name={{.ImageName}}'
+            max-size: 50m
         networks:
             - app_network
         environment:
@@ -23,6 +29,12 @@ services:
     nginx:
         image: docker pull ghcr.io/japskua/project-nginx:main
         command: /bin/sh -c /etc/nginx/init-prod.sh
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=nginx,image_name={{.ImageName}}'
+            max-size: 50m
         networks:
             - app_network
         environment:
@@ -44,6 +56,12 @@ services:
         
     backend:
         image: docker pull ghcr.io/japskua/project-backend:main
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=backend,image_name={{.ImageName}}'
+            max-size: 50m
         networks:
             - app_network
         environment:
@@ -70,6 +88,12 @@ services:
 
     processor:
         image: docker pull ghcr.io/japskua/project-processor:main
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=processor,image_name={{.ImageName}}'
+            max-size: 50m
         networks:
             - app_network
         environment:

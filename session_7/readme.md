@@ -1,4 +1,4 @@
-# Cloud Services & Infrastructure - Session 6 - Productionizing the Application & CI/CD Pipeline in GitHub
+# Cloud Services & Infrastructure - Session 7 - Deploying to a Cloud Provider
 
 Goal: Deploy the full system to a cloud provider.
 Topics & Hands-on:
@@ -407,7 +407,14 @@ networks:
         external: true
 ```
 
-### 2.5 Deploying our own stack
+### 2.5 Create a volume for Postgres
+
+1. Navigate to Volumes -> Add Volume
+2. Name the volume `postgres_data`
+3. Make sure it is created on the worker-1 node
+4. And create!
+
+### 2.6 Deploying our own stack
 
 Now, we have working docker-swarm, portainer for management and traefik for routing. We can now finally deploy our own stack.
 

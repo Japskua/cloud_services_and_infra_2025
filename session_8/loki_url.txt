@@ -1,0 +1,1 @@
+https://myuser:mypassword@loki.myservice.com/loki/api/v1/push
