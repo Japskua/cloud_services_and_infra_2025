@@ -124,13 +124,6 @@ services:
               condition: on-failure
               delay: 5s
               max_attempts: 3
-            labels:
-              - "traefik.enable=true"
-              - "traefik.http.routers.postgres.rule=Host(`postgres.myservice.com`)" # Remember to change URL
-              - "traefik.http.routers.postgres.entrypoints=websecure"
-              - "traefik.http.routers.postgres.tls=true"
-              - "traefik.http.services.postgres.loadbalancer.server.port=5432"
-              - "traefik.http.routers.postgres.tls.certresolver=myresolver"
         
         
 

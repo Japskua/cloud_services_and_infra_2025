@@ -25,6 +25,7 @@ services:
               - "traefik.http.routers.auth.entrypoints=websecure"
               - "traefik.http.routers.auth.tls=true"
               - "traefik.http.services.auth.loadbalancer.server.port=3001"
+              - "traefik.http.routers.auth.tls.certresolver=myresolver"
         
     nginx:
         image: docker pull ghcr.io/japskua/project-nginx:main
@@ -53,6 +54,7 @@ services:
               - "traefik.http.routers.nginx.entrypoints=websecure"
               - "traefik.http.routers.nginx.tls=true"
               - "traefik.http.services.nginx.loadbalancer.server.port=8904"
+              - "traefik.http.routers.nginx.tls.certresolver=myresolver"
         
     backend:
         image: docker pull ghcr.io/japskua/project-backend:main
@@ -84,6 +86,7 @@ services:
               - "traefik.http.routers.backend.entrypoints=websecure"
               - "traefik.http.routers.backend.tls=true"
               - "traefik.http.services.backend.loadbalancer.server.port=3000"
+              - "traefik.http.routers.backend.tls.certresolver=myresolver"
         
 
     processor:
@@ -115,6 +118,7 @@ services:
               - "traefik.http.routers.processor.entrypoints=websecure"
               - "traefik.http.routers.processor.tls=true"
               - "traefik.http.services.processor.loadbalancer.server.port=8000"
+              - "traefik.http.routers.processor.tls.certresolver=myresolver"
         
     postgres:
         image: postgres:17.2
@@ -142,12 +146,6 @@ services:
               condition: on-failure
               delay: 5s
               max_attempts: 3
-            labels:
-              - "traefik.enable=true"
-              - "traefik.http.routers.postgres.rule=Host(`postgres.myservice.com`)" # Remember to change URL
-              - "traefik.http.routers.postgres.entrypoints=websecure"
-              - "traefik.http.routers.postgres.tls=true"
-              - "traefik.http.services.postgres.loadbalancer.server.port=5432"
         
         
 
