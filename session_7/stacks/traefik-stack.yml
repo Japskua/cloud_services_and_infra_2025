@@ -1,0 +1,83 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: public.ecr.aws/docker/library/traefik:v2.11.21
+    logging:
+      options:
+        max-size: 50m
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmmode=true"
+      - "--providers.docker.watch"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      # SSL Configurations
+      - "--certificatesresolvers.myresolver.acme.email=japskua@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesResolvers.myresolver.acme.dnsChallenge.provider=digitalocean"
+      - "--certificatesResolvers.myresolver.acme.dnsChallenge.delayBeforeCheck=0"
+      # Comment this to go into production
+      # - "--certificatesResolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # Metrics definitions
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.buckets=0.1,0.3,1.2,5.0"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      - "--metrics.prometheus.manualrouting=true"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    environment:
+      - DO_TOKEN_FILE=/run/secrets/do_token
+    secrets:
+      - do_token
+      - prometheus_users
+      - traefik_users
+    ports:
+      - "443:443"
+    networks:
+      - app_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=app_network"
+        # Configure the Dashboard
+        - "traefik.http.routers.traefik.rule=Host(`traefik.myservice.com`)"
+        - "traefik.http.routers.traefik.entrypoints=websecure"
+        - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+        - "traefik.http.services.traefik.loadbalancer.server.port=9999"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.middlewares=traefik-auth"
+        - "traefik.http.middlewares.traefik-auth.basicauth.usersfile=/run/secrets/prometheus_users"
+        # The prometheus metrics configs  
+        - "traefik.http.routers.metrics.rule=Host(`traefik.myservice.com`) && Path(`/metrics`)"
+        - "traefik.http.routers.metrics.entrypoints=websecure"
+        - "traefik.http.routers.metrics.tls.certresolver=myresolver"
+        - "traefik.http.routers.metrics.service=prometheus@internal"
+        - "traefik.http.routers.metrics.middlewares=prometheus-auth"
+        - "traefik.http.middlewares.prometheus-auth.basicauth.usersfile=/run/secrets/prometheus_users"
+        
+secrets:
+  traefik_users:
+    external: true
+  prometheus_users:
+    external: true
+  do_token:
+    external: true
+    
+volumes:
+  letsencrypt:
+    external: true
+    
+networks:
+  app_network:
+    external: true

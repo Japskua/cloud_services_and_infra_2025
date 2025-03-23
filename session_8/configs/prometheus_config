@@ -1,0 +1,70 @@
+# Global settings for Prometheus
+global:
+  scrape_interval: 15s      # How frequently to scrape targets by default
+  evaluation_interval: 15s   # How frequently to evaluate rules
+  external_labels:          # Labels to add to any time series or alerts
+    monitor: 'my-project'   # Identifies this Prometheus instance
+
+# Rules for alerts and recording rules
+rule_files:
+  - 'alert.rules'          # Load alert definitions from this file
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - scheme: http         # Protocol for connecting to Alertmanager
+      static_configs:
+        - targets:
+          - "alertmanager:9093"  # Alertmanager service endpoint
+
+# Scrape configurations - defines what Prometheus monitors
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    scrape_interval: 5s    # Override global interval
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Traefik reverse proxy monitoring
+  - job_name: 'traefik'
+    scrape_interval: 5s
+    dns_sd_configs:        # Service discovery via DNS
+      - names:
+          - 'tasks.traefik'
+        type: 'A'
+        port: 8080
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  # Loki log aggregation metrics
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+
+  # Promtail log collection metrics
+  - job_name: 'promtail'
+    dns_sd_configs:
+      - names:
+        - 'tasks.promtail'
+        type: 'A'
+        port: 9080
+
+
+  # Health monitoring for our services
+
+  - job_name: 'auth-up'
+    scrape_interval: 15s
+    scheme: https
+    static_configs:
+      - targets:
+        - auth.myservice.com
+
+  - job_name: 'backend-up'
+    scrape_interval: 15s
+    scheme: https
+    static_configs:
+      - targets:
+        - backend.myservice.com

@@ -1,0 +1,161 @@
+services:
+    auth:
+        image: ghcr.io/japskua/project-auth:session_8
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=auth,image_name={{.ImageName}}'
+            max-size: 50m
+        networks:
+            - app_network
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+            - TZ=Europe/Helsinki
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.auth.rule=Host(`auth.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.auth.entrypoints=websecure"
+              - "traefik.http.routers.auth.tls=true"
+              - "traefik.http.services.auth.loadbalancer.server.port=3001"
+              - "traefik.http.routers.auth.tls.certresolver=myresolver"
+        
+    nginx:
+        image: ghcr.io/japskua/project-nginx:session_8
+        command: /bin/sh -c /etc/nginx/init-prod.sh
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=nginx,image_name={{.ImageName}}'
+            max-size: 50m
+        networks:
+            - app_network
+        environment:
+            - SERVER_UI_NAME=app.myservice.com # Remember to change URL
+            - CSP_DOMAIN=*.myservice.com
+            - TZ=Europe/Helsinki
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.nginx.rule=Host(`app.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.nginx.entrypoints=websecure"
+              - "traefik.http.routers.nginx.tls=true"
+              - "traefik.http.services.nginx.loadbalancer.server.port=8904"
+              - "traefik.http.routers.nginx.tls.certresolver=myresolver"
+        
+    backend:
+        image: ghcr.io/japskua/project-backend:session_8
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=backend,image_name={{.ImageName}}'
+            max-size: 50m
+        networks:
+            - app_network
+        environment:
+            - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+            - TZ=Europe/Helsinki
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.backend.rule=Host(`backend.myservice.com`)" # Remember to change URL
+              - "traefik.http.routers.backend.entrypoints=websecure"
+              - "traefik.http.routers.backend.tls=true"
+              - "traefik.http.services.backend.loadbalancer.server.port=3000"
+              - "traefik.http.routers.backend.tls.certresolver=myresolver"
+        
+
+    processor:
+        image: ghcr.io/japskua/project-processor:session_8
+        logging:
+          driver: loki
+          options:
+            loki-url: ${LOKI_URL}
+            loki-external-labels: 'container_name={{.Name}},cluster=my-cluster,service_name=processor,image_name={{.ImageName}}'
+            max-size: 50m
+        networks:
+            - app_network
+        environment:
+            - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+            - TZ=Europe/Helsinki
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+            labels:
+              - "traefik.enable=true"
+              - "traefik.http.routers.processor.rule=Host(`processor.myservice.com`)" # Remember to change this!
+              - "traefik.http.routers.processor.entrypoints=websecure"
+              - "traefik.http.routers.processor.tls=true"
+              - "traefik.http.services.processor.loadbalancer.server.port=8000"
+              - "traefik.http.routers.processor.tls.certresolver=myresolver"
+        
+    postgres:
+        image: public.ecr.aws/docker/library/postgres:17.2
+        networks:
+            - app_network
+        environment:
+            - TZ=Europe/Helsinki
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=projectdb
+        volumes:
+            - "postgres_data:/var/lib/postgresql/data"
+            - "db_init:/db_init"
+        healthcheck: # Hey! We are checking that the postgres is up and running!
+            test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+              constraints:
+                - node.role == worker
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 3
+        
+
+networks:
+  app_network:
+    external: true
+
+volumes:
+  postgres_data:
+    external: true
+  db_init:
+    external: true

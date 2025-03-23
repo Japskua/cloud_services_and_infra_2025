@@ -1,0 +1,298 @@
+/* ui/src/App.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #4a90e2;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: #e53935;
+  background-color: #ffebee;
+  border-radius: 8px;
+}
+
+/* Flexbox layout */
+.books-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px; /* Negative margin to counteract the padding on cards */
+}
+
+.book-card {
+  flex: 0 0 calc(33.333% - 20px); /* Three columns minus the margins */
+  margin: 10px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* For tablets */
+@media (max-width: 1024px) {
+  .book-card {
+    flex: 0 0 calc(50% - 20px); /* Two columns on tablets */
+  }
+}
+
+/* For mobile */
+@media (max-width: 600px) {
+  .book-card {
+    flex: 0 0 calc(100% - 20px); /* One column on mobile */
+  }
+}
+
+.book-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.book-genre {
+  display: inline-block;
+  background-color: #4a90e2;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.book-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.book-author {
+  color: #666;
+  font-size: 1rem;
+}
+
+.book-details {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.book-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.book-description {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.recommendation-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.recommendation-title {
+  color: #4a90e2;
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+}
+
+.recommendation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.recommendation-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.recommendation-input-container label {
+  font-weight: 500;
+  color: #555;
+  font-size: 1rem;
+}
+
+.recommendation-input {
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  background-color: #fafafa;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.recommendation-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.recommendation-button {
+  background-color: #4a90e2;
+  color: white;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+  min-width: 200px;
+  box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2);
+}
+
+.recommendation-button:hover {
+  background-color: #3a80d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+}
+
+.recommendation-button:disabled {
+  background-color: #9fc6f0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.recommendations-result {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.recommendations-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.recommendations-header h3 {
+  font-size: 1.4rem;
+  color: #333;
+  margin: 0;
+}
+
+.recommendation-query {
+  color: #666;
+  font-style: italic;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  background-color: #f5f7fa;
+  border-left: 3px solid #4a90e2;
+  border-radius: 0 4px 4px 0;
+}
+
+.reset-button {
+  background-color: #f5f7fa;
+  color: #4a90e2;
+  border: 1px solid #4a90e2;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.reset-button:hover {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.section-title {
+  color: #333;
+  font-size: 1.8rem;
+  margin: 2rem 0 1.5rem;
+  font-weight: 600;
+}
+
+.recommended-book {
+  border: 2px solid #4a90e2;
+  position: relative;
+}
+
+.recommended-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: #4a90e2;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.no-recommendations {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f5f7fa;
+  border-radius: 6px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.similarity-score {
+  background-color: #e3f2fd;
+  color: #1e88e5;
+  padding: 0.3rem 0.7rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

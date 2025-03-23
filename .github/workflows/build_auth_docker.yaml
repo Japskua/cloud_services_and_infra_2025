@@ -38,9 +38,9 @@ jobs:
 
             - name: Build Docker Image
               run: |
-                  docker build -f session_6/auth/production.Dockerfile \
+                  docker build -f session_8/auth/production.Dockerfile \
                     -t ghcr.io/${{ env.REPO_OWNER }}/project-auth:${{ env.BRANCH_NAME }} \
-                    session_6/auth/
+                    session_8/auth/
 
             - name: Push Docker Image to GHCR
               run: |
