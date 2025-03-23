@@ -280,9 +280,131 @@ Now, we should be able to access Grafana at https://grafana.myservice.com. Go an
 If this is the first time you are accessing Grafana, you will be prompted to create a new password.
 Create a password and log in.
 
-Yes! Now we just need to do the final configs to our existing stacks, in order to get logs flowing to loki!
+Yes! Now we just need to do the final configs to our existing stacks, in order to get logs flowing to loki and prometheus!
 
-### 1.6 Configure my-stack to use Loki
+### 1.6 Add Prometheus metrics to backend and auth services
+
+We need to add prometheus metrics to appear in our services. Let's do that now for our `backend` and `auth` services.
+The code is the same for both, so for simplicity, these instructions only cover the `backend`. You can check the GitHub code for the auth part.
+
+First, install prometheus client to our packages.
+
+```bash
+cd backend
+bun add prom-client
+```
+
+Now, we need to add the prometheus client to our code.
+
+##### backend/src/metrics/index.ts
+
+```typescript
+// auth/src/metrics/index.ts
+import client from "prom-client";
+
+// Enable default metrics
+client.collectDefaultMetrics();
+
+// Example histogram
+export const httpRequestDuration = new client.Histogram({
+    name: "http_request_duration_ms",
+    help: "Duration of HTTP requests in ms",
+    labelNames: ["method", "route", "code"],
+    buckets: [50, 100, 200, 300, 400, 500, 1000]
+});
+
+export const register = client.register;
+```
+
+And add this to our index.ts
+
+##### backend/src/index.ts
+
+```typescript
+// backend/src/index.ts
+
+import { Elysia } from "elysia";
+import swagger from "@elysiajs/swagger";
+import { cors } from "@elysiajs/cors";
+import { protectedRouter } from "./routes/protectedRouter";
+import { register } from "./metrics";
+
+const PORT = process.env.PORT || 3000;
+
+const app = new Elysia()
+    .use(swagger())
+    .use(cors())
+    .get("/metrics", async () => {
+        return new Response(await register.metrics(), {
+            headers: {
+                "Content-Type": register.contentType
+            }
+        });
+    })
+    .get("/", () => "Hello Elysia")
+    .get("/hello", "Do you miss me?")
+    .use(protectedRouter)
+    .listen(PORT);
+
+console.log(
+    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
+```
+
+And we want to measure also how long our route queries take. Let's add one to the /books route.
+
+##### backend/src/routes/protectedRouter.ts
+
+```typescript
+// backend/src/routes/protectedRouter.ts
+
+import Elysia from "elysia";
+import { jwtConfig } from "../config/jwtConfig";
+import { authorizationMiddleware } from "../middleware/authorization";
+import { getBooks } from "../database";
+import { httpRequestDuration } from "../metrics";
+
+export const protectedRouter = new Elysia()
+    .use(jwtConfig)
+    .derive(authorizationMiddleware)
+    .guard(
+        {
+            beforeHandle: ({ user, error }) => {
+                // 1. Check if the user is authenticated
+                //    If not, return a 401 error
+                console.log("user", user);
+                if (!user) return error(401, "Not Authorized");
+            }
+        },
+        (app) =>
+            app
+                .get("/me", ({ user, error }) => {
+                    // 1. Check if the user object is present, indicating an authenticated user
+                    //    If the user is not authenticated (user is null or undefined), return a 401 error
+                    if (!user) return error(401, "Not Authorized");
+
+                    // 2. If the user is authenticated, return the user
+                    return { user };
+                })
+                .get("/books", async () => {
+                    const startTime = Date.now();
+                    console.log("trying to get books! Checking for the user!");
+                    const books = await getBooks();
+                    const duration = Date.now() - startTime;
+                    // Log the duration of the request
+                    httpRequestDuration
+                        .labels({
+                            method: "GET",
+                            route: "/books",
+                            code: "200"
+                        })
+                        .observe(duration);
+                    return JSON.stringify(books);
+                })
+    );
+```
+
+### 1.7 Configure my-stack to use Loki
 
 Remember, in the previou session we installed a `loki driver` to each of our linux machines that are running docker. If you did not do that, you can still do it. Log to each of your linux machines and run the following command:
 
