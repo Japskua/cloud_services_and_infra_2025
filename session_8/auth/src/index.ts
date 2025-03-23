@@ -3,19 +3,23 @@
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
-import metricsMiddleware from "elysia-prometheus-metrics";
+import { register } from "./metrics";
 import { signupRouter } from "./routes/signupRouter";
 import { loginRouter } from "./routes/loginRouter";
 import { protectedRouter } from "./routes/protectedRouter";
 
 const PORT = process.env.PORT || 3001;
 
-const middlewareOptions = {};
-
 const app = new Elysia()
     .use(swagger())
     .use(cors())
-    .use(metricsMiddleware(middlewareOptions))
+    .get("/metrics", async () => {
+        return new Response(await register.metrics(), {
+            headers: {
+                "Content-Type": register.contentType
+            }
+        });
+    })
     .get("/", () => "Hello from auth!")
     .use(signupRouter)
     .use(loginRouter)
