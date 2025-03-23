@@ -4,7 +4,6 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getServiceUrl } from "../helpers/urlHelper";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -27,10 +26,8 @@ const Login = () => {
             setLoading(true);
             setError(null);
 
-            const authAddress = getServiceUrl("auth");
-
             // Send login request to the auth server
-            const response = await axios.post(`${authAddress}/login`, {
+            const response = await axios.post("https://auth.localhost/login", {
                 email,
                 password
             });
