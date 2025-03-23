@@ -437,3 +437,66 @@ Now, we can finally see our logs in Grafana!
 ## 2. Using Grafana
 
 We can now use Grafana to visualize our data. Let's create a dashboard and name it `My Stack`.
+
+### 2.1 Add avg /books duration
+
+1. Add new visualization.
+2. Set the Date source to be `prometheus`
+3. Copy the following promql query (divide total sum with count of access):
+
+```
+http_request_duration_ms_sum{method="GET",route="/books",code="200"}
+/
+http_request_duration_ms_count{method="GET",route="/books",code="200"}
+```
+
+4. Change the visualization type to `Stat`
+5. Change the title to `Backend avg /books duration (ms)`
+6. Set the unit to `milliseconds`
+7. Save the dashboard.
+
+#### 2.2 Add avg /books duration graph
+
+1. Add new visualization.
+2. Set the Date source to be `prometheus`
+3. Copy the following promql query (divide total sum with count of access):
+
+```
+rate(http_request_duration_ms_sum{method="GET",route="/books",code="200"}[1m])
+/
+rate(http_request_duration_ms_count{method="GET",route="/books",code="200"}[1m])
+```
+
+4. Change the visualization type to `Time series`
+5. Change the title to `Backend avg /books duration (ms)`
+6. Set the unit to `milliseconds`
+7. Save the dashboard.
+
+#### 2.3 Add avg /books duration graph
+
+1. Add new visualization.
+2. Set the Date source to be `prometheus`
+3. Create 3 different prometheus queries: (A, B and C):
+
+A
+
+```
+histogram_quantile(0.90, rate(http_request_duration_ms_bucket{method="GET",route="/books",code="200"}[1m]))
+```
+
+B
+
+```
+histogram_quantile(0.95, rate(http_request_duration_ms_bucket{method="GET",route="/books",code="200"}[1m]))
+```
+
+C
+
+```
+histogram_quantile(0.99, rate(http_request_duration_ms_bucket{method="GET",route="/books",code="200"}[1m]))
+```
+
+4. Change the visualization type to `Time series`
+5. Change the title to `Backend avg /books duration (ms)`
+6. Set the unit to `milliseconds`
+7. Save the dashboard.
