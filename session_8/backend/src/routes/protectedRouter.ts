@@ -4,6 +4,7 @@ import Elysia from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
 import { getBooks } from "../database";
+import { httpRequestDuration } from "../metrics";
 
 export const protectedRouter = new Elysia()
     .use(jwtConfig)
@@ -28,8 +29,18 @@ export const protectedRouter = new Elysia()
                     return { user };
                 })
                 .get("/books", async () => {
+                    const startTime = Date.now();
                     console.log("trying to get books! Checking for the user!");
                     const books = await getBooks();
+                    const duration = Date.now() - startTime;
+                    // Log the duration of the request
+                    httpRequestDuration
+                        .labels({
+                            method: "GET",
+                            route: "/books",
+                            code: "200"
+                        })
+                        .observe(duration);
                     return JSON.stringify(books);
                 })
     );

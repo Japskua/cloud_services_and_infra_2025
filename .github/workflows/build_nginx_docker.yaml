@@ -38,15 +38,15 @@ jobs:
 
             - name: Build UI Docker Image
               run: |
-                  docker build -f session_7/ui/production.Dockerfile \
+                  docker build -f session_8/ui/production.Dockerfile \
                     -t project-ui:prod \
-                    session_7/ui/
+                    session_8/ui/
 
             - name: Build Nginx Docker Image (Uses UI)
               run: |
-                  docker build -f session_7/nginx/Dockerfile \
+                  docker build -f session_8/nginx/Dockerfile \
                     -t ghcr.io/${{ env.REPO_OWNER }}/project-nginx:${{ env.BRANCH_NAME }} \
-                    session_7/nginx/
+                    session_8/nginx/
 
             - name: Push Docker Image to GHCR
               run: |
