@@ -1,5 +1,5 @@
 # Stage 1: Builder - Installs dependencies
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.12.13-slim-bookworm AS builder
 
 # Install necessary system dependencies for building
 RUN apt-get update && apt-get install -y --no-install-recommends \
