@@ -223,7 +223,7 @@ Let's start by creating a new docker-compose-with-traefik.yml file in the root f
 ```yaml
 services:
     traefik:
-        image: traefik:v3.3.3
+        image: traefik:v3.6.10
         command:
             - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
         volumes:
@@ -390,7 +390,7 @@ Here are the contents for the new docker-compose file (node-app and networks par
 ```yaml
 services:
     traefik:
-        image: traefik:v3.3.3
+        image: traefik:v3.6.10
         command:
             - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
         volumes:

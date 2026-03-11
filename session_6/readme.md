@@ -32,7 +32,7 @@ Great, now let's create a production-ready Docker image for the `auth` service.
 
 ```Dockerfile
 # --- Build Stage ---
-FROM oven/bun:1.2.5 AS builder
+FROM oven/bun:1.3.10 AS builder
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
@@ -47,7 +47,7 @@ COPY . .
 RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile bin/auth
 
 # --- Run Stage (Minimized) ---
-FROM oven/bun:1.2.5-slim AS runner
+FROM oven/bun:1.3.10-slim AS runner
 WORKDIR /app
 
 # Copy the binary
@@ -66,7 +66,7 @@ And the same for our backend.
 
 ```Dockerfile
 # --- Build Stage ---
-FROM oven/bun:1.2.5 AS builder
+FROM oven/bun:1.3.10 AS builder
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
@@ -83,7 +83,7 @@ COPY . .
 RUN bun build --compile --minify --sourcemap src/index.ts --outfile bin/backend
 
 # --- Run Stage (Minimized) ---
-FROM oven/bun:1.2.5-slim AS runner
+FROM oven/bun:1.3.10-slim AS runner
 WORKDIR /app
 
 # Copy the binary
@@ -104,7 +104,7 @@ This follows quite the same pattern as the other two services.
 
 ```Dockerfile
 # Stage 1: Builder - Installs dependencies
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.12.13-slim-bookworm AS builder
 
 # Install necessary system dependencies for building
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -122,7 +122,7 @@ services:
               - "traefik.http.routers.processor.tls.certresolver=myresolver"
         
     postgres:
-        image: public.ecr.aws/docker/library/postgres:17.2
+        image: public.ecr.aws/docker/library/postgres:17.4
         networks:
             - app_network
         environment:

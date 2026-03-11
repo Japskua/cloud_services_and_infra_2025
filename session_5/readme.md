@@ -347,7 +347,7 @@ Now, we still need to create a Dockerfile to build our image. Here is an example
 
 ```dockerfile
 # Dockerfile
-FROM python:3.12-slim-bookworm
+FROM python:3.12.13-slim-bookworm
 
 # Copy uv from the official image
 COPY --from=ghcr.io/astral-sh/uv:0.6.7 /uv /uvx /bin/
@@ -1107,7 +1107,7 @@ Let's start with the frontend Dockerfile.
 ```dockerfile
 # use the official Bun image
 # see all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:1.2.5
+FROM oven/bun:1.3.10
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY package*.json .
@@ -1121,7 +1121,7 @@ Now, we need to create a new file called `Dockerfile` in the `nginx` folder. Thi
 ##### `nginx/Dockerfile`
 
 ```dockerfile
-FROM public.ecr.aws/nginx/nginx:1.27.4
+FROM public.ecr.aws/nginx/nginx:1.29.6
 LABEL Description="This is a single backend server setting configuration for nginx image"
 RUN rm /etc/nginx/conf.d/default.conf
 COPY init-prod.sh /etc/nginx/init-prod.sh
@@ -1182,7 +1182,7 @@ Notice that there is not longer `ui` service and we have a `nginx` service inste
 ```yaml
 services:
     traefik:
-        image: traefik:v3.3.3
+        image: traefik:v3.6.10
         command:
             - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
         volumes:
@@ -1274,7 +1274,7 @@ services:
             - "traefik.http.routers.processor.tls=true"
             - "traefik.http.services.processor.loadbalancer.server.port=8000"
     postgres:
-        image: postgres:17.2
+        image: postgres:17.4
         environment:
             - TZ=Europe/Helsinki
             - POSTGRES_USER=user

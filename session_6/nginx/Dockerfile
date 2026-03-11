@@ -1,4 +1,4 @@
-FROM public.ecr.aws/nginx/nginx:1.27.4
+FROM public.ecr.aws/nginx/nginx:1.29.6
 LABEL Description="This is a single backend server setting configuration for nginx image"
 RUN rm /etc/nginx/conf.d/default.conf
 COPY init-prod.sh /etc/nginx/init-prod.sh

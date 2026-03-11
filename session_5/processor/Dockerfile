@@ -1,5 +1,5 @@
 # Dockerfile
-FROM python:3.12-slim-bookworm
+FROM python:3.12.13-slim-bookworm
 
 # Copy uv from the official image
 COPY --from=ghcr.io/astral-sh/uv:0.6.7 /uv /uvx /bin/

@@ -76,7 +76,7 @@ version: "3.8"
 
 services:
     prometheus:
-        image: prom/prometheus:v3.2.1
+        image: prom/prometheus:v3.10.0
         healthcheck:
             test:
                 [
@@ -125,7 +125,7 @@ services:
             - "--web.enable-lifecycle"
 
     alert-manager:
-        image: prom/alertmanager:v0.28.1
+        image: prom/alertmanager:v0.31.1
         logging:
             driver: "json-file"
             options:
@@ -152,7 +152,7 @@ services:
             - "--storage.path=/alertmanager"
 
     grafana:
-        image: grafana/grafana-oss:11.3.4
+        image: grafana/grafana-oss:12.4.1
         logging:
             driver: "json-file"
             options:
@@ -185,7 +185,7 @@ services:
                 - "traefik.docker.network=traefik-net"
 
     promtail:
-        image: grafana/promtail:3.4.2
+        image: grafana/promtail:3.6.7
         logging:
             driver: "json-file"
             options:
@@ -210,7 +210,7 @@ services:
                     memory: 64M
 
     loki:
-        image: grafana/loki:3.4.2
+        image: grafana/loki:3.6.7
         logging:
             driver: "json-file"
             options:

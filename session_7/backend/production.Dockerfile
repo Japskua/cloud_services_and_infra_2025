@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM oven/bun:1.2.5 AS builder
+FROM oven/bun:1.3.10 AS builder
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
@@ -16,7 +16,7 @@ COPY . .
 RUN bun build --compile --minify --sourcemap src/index.ts --outfile bin/backend
 
 # --- Run Stage (Minimized) ---
-FROM oven/bun:1.2.5-slim AS runner
+FROM oven/bun:1.3.10-slim AS runner
 WORKDIR /app
 
 # Copy the binary
