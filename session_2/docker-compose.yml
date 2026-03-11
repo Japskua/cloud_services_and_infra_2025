@@ -1,6 +1,6 @@
 services:
     traefik:
-        image: traefik:v3.3.3
+        image: traefik:v3.6.10
         command:
             - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
         volumes:
@@ -37,7 +37,7 @@ services:
             - "traefik.http.routers.backend.tls=true"
             - "traefik.http.services.backend.loadbalancer.server.port=3000"
     postgres:
-        image: postgres:17.2
+        image: postgres:17.4
         environment:
             - TZ=Europe/Helsinki
             - POSTGRES_USER=user

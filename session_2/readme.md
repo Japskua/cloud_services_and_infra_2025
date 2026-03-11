@@ -87,7 +87,7 @@ Now, let's create a docker-compose file for our backend. Create the file `docker
 ```yaml
 services:
     traefik:
-        image: traefik:v3.3.3
+        image: traefik:v3.6.10
         command:
             - "--configFile=/app/configs/traefik.toml" # This is the traefik configuration file
         volumes:
@@ -204,7 +204,7 @@ VALUES
 
 ```yaml
 postgres:
-    image: postgres:17.2
+    image: postgres:17.4
     environment:
         - TZ=Europe/Helsinki
         - POSTGRES_USER=user
